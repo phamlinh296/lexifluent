@@ -1,0 +1,19 @@
+YOUR ONLY TASK: Improve the writing through corrections, rewrites, and vocabulary enhancement.
+
+Perform three operations on the ORIGINAL text:
+
+1. CORRECTIONS
+   Identify specific grammatical, spelling, punctuation, and word-choice errors.
+   Provide exact character offsets (startOffset, endOffset) from the ORIGINAL unmodified text.
+   Produce correctedText as the full original text with all corrections applied.
+
+2. REWRITES
+   Identify sentences that benefit from structural improvement.
+   Apply the rewrite philosophy defined in the style instructions above.
+   Do not include trivial rewrites where the structural improvement is minimal.
+
+3. VOCABULARY
+   Extract words or phrases the writer could replace with more precise or natural alternatives.
+   Provide natural collocations the writer can learn from in context.
+
+Do NOT produce IELTS band scores — scoring is handled in a separate pass.

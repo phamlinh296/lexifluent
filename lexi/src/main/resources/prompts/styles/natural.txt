@@ -1,0 +1,9 @@
+REWRITE FOCUS: Natural fluency and authentic expression.
+
+Improve sentences that sound translated, non-native in phrasing, or awkward in rhythm.
+
+Rules:
+- Preserve the original meaning completely
+- Preserve the writer's intended register — do not make casual writing formal
+- Only suggest rewrites that produce a clear and meaningful naturalness improvement
+- Prioritize fixing unnatural word order and collocation before anything else

@@ -1,0 +1,114 @@
+spring:
+  application:
+    name: lexi
+  config:
+    import: optional:classpath:application-resilience.yaml
+
+  datasource:
+    url: ${DATABASE_URL:jdbc:mysql://localhost:3306/lexifluent?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=UTF-8&connectionCollation=utf8mb4_unicode_ci&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false}
+    username: ${DATABASE_USERNAME:username}
+    password: ${DATABASE_PASSWORD:password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      connection-init-sql: "ALTER DATABASE lexifluent CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+
+  flyway:
+    enabled: false   # dùng ddl-auto:update cho MVP, bật lại khi chuẩn bị production
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASS:}
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+        max.block.ms: 3000
+    consumer:
+      group-id: lexi-backend
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: "org.linh.lexi.*"
+    listener:
+      ack-mode: manual
+
+lexi:
+  oauth2:
+    redirect-uri: ${OAUTH2_REDIRECT_URI:http://localhost:3000/oauth/callback}
+
+  jwt:
+    secret: ${JWT_SECRET:lexifluent-dev-secret-change-in-production-min-256-bits}
+    access-expiry: 900       # 15 minutes
+    refresh-expiry: 604800   # 7 days
+
+  ai:
+    gemini:
+      api-key: ${GEMINI_API_KEY:}
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+    claude:
+      api-key: ${ANTHROPIC_API_KEY:}
+    default-provider: ${AI_DEFAULT_PROVIDER:GEMINI}
+    fallback-provider: ${AI_FALLBACK_PROVIDER:OPENAI}
+    cheap-model: ${AI_CHEAP_MODEL:gemini-2.5-flash}
+    strong-model: ${AI_STRONG_MODEL:gemini-2.5-flash}
+    quota:
+      daily-tokens-per-user: ${AI_DAILY_TOKEN_QUOTA:50000}
+
+  rate-limit:
+    requests-per-minute: ${RATE_LIMIT_RPM:30}
+    burst-capacity: ${RATE_LIMIT_BURST:10}
+
+server:
+  port: ${PORT:8080}
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+logging:
+  level:
+    org.linh.lexi: ${LOG_LEVEL:INFO}
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

@@ -1,0 +1,8 @@
+CRITICAL OUTPUT RULES:
+- Return ONLY valid JSON. No markdown. No code blocks. No explanation text.
+- Do not wrap output in ```json or ``` delimiters.
+- Do not omit required fields. Use null only for fields explicitly marked optional.
+- All numeric scores must be within their stated valid range.
+- All enum values must exactly match the allowed strings — case-sensitive.
+- Do not invent fields not defined in the schema.
+- Do not add commentary before or after the JSON object.

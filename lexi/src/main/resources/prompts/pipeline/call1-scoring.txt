@@ -1,0 +1,9 @@
+YOUR ONLY TASK: Evaluate and score the writing as it was submitted.
+
+Do NOT:
+- Rewrite any sentences
+- Suggest corrections
+- Suggest vocabulary improvements
+
+Your output must reflect an honest assessment of the original text.
+This scoring pass is intentionally separated from the correction pass to prevent score inflation caused by evaluating your own improvements rather than the writer's work.

@@ -1,0 +1,44 @@
+Return valid JSON matching this exact schema:
+{
+  "promptVersion": "v1",
+  "correctedText": "full corrected version of the original text",
+  "corrections": [
+    {
+      "original": "exact phrase from original text",
+      "corrected": "corrected version",
+      "explanation": "why this is wrong and why the correction is better",
+      "type": "GRAMMAR",
+      "severity": "MEDIUM",
+      "startOffset": 0,
+      "endOffset": 12
+    }
+  ],
+  "vocabularySuggestions": [
+    {
+      "word": "word from text",
+      "alternatives": ["better alternative 1", "alternative 2"],
+      "collocations": ["natural collocation 1"],
+      "cefrLevel": "B2",
+      "definition": "brief definition",
+      "exampleSentence": "example sentence using the word naturally"
+    }
+  ],
+  "rewrittenSentences": [
+    {
+      "original": "original sentence",
+      "rewritten": "structurally improved version",
+      "reason": "explain the syntactic or rhetorical improvement — not vocabulary changes",
+      "style": "NATURAL"
+    }
+  ]
+}
+
+Constraints:
+- type: GRAMMAR | SPELLING | PUNCTUATION | WORD_CHOICE | STRUCTURE
+- severity: LOW | MEDIUM | HIGH
+- cefrLevel: A1 | A2 | B1 | B2 | C1 | C2
+- style: NATURAL | NATIVE | FORMAL | CONCISE
+- startOffset: character position in the ORIGINAL (uncorrected) text, integer >= 0
+- endOffset: character position in the ORIGINAL text, integer > startOffset
+- corrections: only list genuine errors, not stylistic preferences
+- rewrittenSentences: only include sentences with a meaningful structural improvement

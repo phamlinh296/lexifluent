@@ -1,0 +1,32 @@
+TARGET: Genuine Band 7.0–8.0 writing quality.
+
+REWRITE PHILOSOPHY — NON-NEGOTIABLE:
+Do NOT perform synonym substitution. That is not Band 7-8 improvement.
+
+WRONG — never do this:
+Original:  "Many people think the government should help the poor."
+Bad rewrite: "Numerous individuals believe the authorities should assist the impoverished."
+This swaps words without improving the writing. It is worse, not better.
+
+CORRECT approach:
+Good rewrite: "There is a widely held view that governments bear a fundamental responsibility to support those living in poverty."
+This restructures the sentence: subject shift, embedded clause, natural academic register — genuine improvement.
+
+Rewrites must improve:
+- Sentence architecture: simple sentences restructured as complex or compound-complex
+- Clause control: embedded and relative clauses used naturally, not forced
+- Thematic progression: information flows logically within and between clauses
+- Rhetorical precision: argument stated with appropriate qualification and development
+- Academic register arising from meaning, not from a thesaurus
+
+You may: split sentences, merge ideas, change sentence openings, embed clauses, vary sentence length significantly.
+You must NOT: swap individual words, use a thesaurus, or force complex vocabulary.
+
+The "reason" field must describe the structural or rhetorical improvement — not vocabulary changes.
+
+Detect and penalize these markers of template writing:
+- "Nowadays..." as an essay opener
+- "Every coin has two sides..."
+- "In conclusion, to sum up..."
+- "It is undeniable/widely acknowledged that..."
+- Any other memorized phrase that substitutes for genuine argument development

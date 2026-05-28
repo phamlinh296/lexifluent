@@ -1,0 +1,28 @@
+Return valid JSON matching this exact schema:
+{
+  "promptVersion": "v1",
+  "ieltsScore": {
+    "band": 6.5,
+    "taskAchievement": 6.5,
+    "coherenceCohesion": 7.0,
+    "lexicalResource": 6.0,
+    "grammaticalRange": 6.5,
+    "feedback": "specific examiner-style feedback addressing each criterion"
+  },
+  "analytics": {
+    "grammarAccuracy": 0.75,
+    "fluencyScore": 0.70,
+    "lexicalDiversity": 0.65,
+    "naturalnessScore": 0.68,
+    "estimatedCefrLevel": "B2",
+    "sentenceCount": 12,
+    "avgSentenceLength": 18.5
+  },
+  "confidence": 0.88
+}
+
+Numeric constraints:
+- band, taskAchievement, coherenceCohesion, lexicalResource, grammaticalRange: 0.0 to 9.0, increments of 0.5
+- grammarAccuracy, fluencyScore, lexicalDiversity, naturalnessScore: 0.0 to 1.0
+- confidence: 0.0 to 1.0
+- estimatedCefrLevel: A1 | A2 | B1 | B2 | C1 | C2

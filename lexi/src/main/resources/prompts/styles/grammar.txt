@@ -1,0 +1,7 @@
+CORRECTION FOCUS: Grammar, spelling, and punctuation only.
+
+Rules:
+- Preserve the writer's sentence structure wherever grammatically acceptable
+- Preserve word choices unless they are genuinely incorrect
+- Only correct real errors — not stylistic preferences or minor awkwardness
+- Mark every correction with precise character offsets from the original text
