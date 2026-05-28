@@ -85,10 +85,38 @@ export type WritingStatus =
   | 'PROCESSED'
   | 'FAILED';
 
+export type EssayType =
+  | 'OPINION'
+  | 'DISCUSSION'
+  | 'ADVANTAGES_DISADVANTAGES'
+  | 'PROBLEM_SOLUTION'
+  | 'DOUBLE_QUESTION'
+  | 'DIRECT_QUESTION';
+
+export type Task1Type =
+  | 'LINE_GRAPH'
+  | 'BAR_CHART'
+  | 'PIE_CHART'
+  | 'TABLE'
+  | 'MIXED_CHART'
+  | 'PROCESS'
+  | 'MAP';
+
+export type TargetBand =
+  | 'BAND_6_0'
+  | 'BAND_6_5'
+  | 'BAND_7_0'
+  | 'BAND_7_5'
+  | 'BAND_8_0'
+  | 'BAND_8_5';
+
 export interface WritingEntry {
   id: string;
   mode: WritingMode;
   correctionStyle: CorrectionStyle;
+  essayType: EssayType | null;
+  task1Type: Task1Type | null;
+  targetBand: TargetBand | null;
   title: string | null;
   originalText: string;
   wordCount: number;
@@ -101,10 +129,13 @@ export interface WritingEntry {
 
 export interface SubmitWritingRequest {
   mode: WritingMode;
-  correctionStyle: CorrectionStyle;
+  correctionStyle?: CorrectionStyle;  // nullable for IELTS — derived from targetBand
   text: string;
   title?: string;
   topicPrompt?: string;
+  essayType?: EssayType;
+  task1Type?: Task1Type;
+  targetBand?: TargetBand;
 }
 
 // ─── AI Feedback ─────────────────────────────────────────────────────────────

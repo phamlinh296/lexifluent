@@ -15,6 +15,34 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/utils';
 
+const ESSAY_TYPE_LABELS: Record<string, string> = {
+  OPINION: 'Opinion',
+  DISCUSSION: 'Discussion',
+  ADVANTAGES_DISADVANTAGES: 'Adv & Disadv',
+  PROBLEM_SOLUTION: 'Problem-Solution',
+  DOUBLE_QUESTION: 'Double Question',
+  DIRECT_QUESTION: 'Direct Question',
+};
+
+const TASK1_TYPE_LABELS: Record<string, string> = {
+  BAR_CHART: 'Bar Chart',
+  LINE_GRAPH: 'Line Graph',
+  PIE_CHART: 'Pie Chart',
+  TABLE: 'Table',
+  MIXED_CHART: 'Mixed Charts',
+  PROCESS: 'Process',
+  MAP: 'Map / Plan',
+};
+
+const TARGET_BAND_LABELS: Record<string, string> = {
+  BAND_6_0: 'Target Band 6.0',
+  BAND_6_5: 'Target Band 6.5',
+  BAND_7_0: 'Target Band 7.0',
+  BAND_7_5: 'Target Band 7.5',
+  BAND_8_0: 'Target Band 8.0',
+  BAND_8_5: 'Target Band 8.5',
+};
+
 const AI_PROCESSING_MESSAGES = [
   'AI đang đọc bài viết của bạn...',
   'Đang phân tích ngữ pháp và cấu trúc...',
@@ -92,12 +120,30 @@ export default function WritingDetailPage({ params }: { params: Promise<{ id: st
       <div className="flex items-start justify-between gap-4 mb-6">
         <div>
           <h1 className="text-xl font-semibold">{entry.title ?? 'Không có tiêu đề'}</h1>
-          <div className="flex items-center gap-3 mt-2">
+          <div className="flex items-center gap-3 mt-2 flex-wrap">
             <WritingStatusBadge status={entry.status} />
             <span className="text-xs text-muted-foreground">{entry.wordCount} từ</span>
             <span className="text-xs text-muted-foreground">{formatDate(entry.createdAt)}</span>
             {feedback?.confidence != null && (
               <span className="text-xs text-muted-foreground">Độ tin cậy: {Math.round(feedback.confidence * 100)}%</span>
+            )}
+          </div>
+          {/* Classification context */}
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
+            {entry.essayType && (
+              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                {ESSAY_TYPE_LABELS[entry.essayType] ?? entry.essayType}
+              </span>
+            )}
+            {entry.task1Type && (
+              <span className="text-xs bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full font-medium">
+                {TASK1_TYPE_LABELS[entry.task1Type] ?? entry.task1Type}
+              </span>
+            )}
+            {entry.targetBand && (
+              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
+                {TARGET_BAND_LABELS[entry.targetBand] ?? entry.targetBand}
+              </span>
             )}
           </div>
         </div>
