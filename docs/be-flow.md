@@ -317,45 +317,170 @@ POST /api/v1/writing
        ▼
 WritingService.submit()
   - Tạo WritingEntry (status=SUBMITTED)
-  - Publish Kafka: writing.submitted
+  - applicationEventPublisher.publishEvent(WritingSubmittedEvent)
        │
-       ▼ (async, Kafka consumer)
-WritingSubmittedConsumer → AiOrchestrationService.processWriting()
-  1. Đánh dấu status = AI_PROCESSING
-  2. Tạo AiRequest record (provider, model, status=PENDING)
-  3. Kiểm tra daily quota (lexi.ai.quota.daily-tokens-per-user)
-  4. Build system prompt theo (mode + correctionStyle)
-  5. Build user prompt theo (text + topicPrompt + cefrLevel)
-  6. Chọn model:
-     - IELTS + BAND_7_8 → strong model (GPT-4o)
-     - Các trường hợp khác → cheap model (GPT-4o-mini)
-  7. Gọi AI provider (primary: OpenAI, fallback: Claude)
-  8. Validate JSON schema response
-  9. Lưu AiFeedbackEntity
-  10. Cập nhật AiRequest (tokens, latency, status=SUCCESS)
-  11. Đánh dấu WritingEntry status = PROCESSED
-  12. Publish Kafka: ai.feedback.generated
+       ▼ (@EventListener + @Async("aiTaskExecutor") — chạy AFTER_COMMIT)
+AiOrchestrationService.processWriting()
+  1. entry.markProcessing() → status = AI_PROCESSING
+  2. Tạo AiRequest record (provider, model, call_number=1)
+  3. usageTracker.checkQuota(userId)
+  4. ClassificationEngine.classify(entry, style, userId)   ← NEW: 3-tier
+  5. promptComposer.buildScoringSystemPrompt(classification)
+  6. promptComposer.buildUserPrompt(text, topicPrompt, cefrLevel)
+  7. LLM Call 1 (IELTS) → AnalysisSchema (scores + analytics)
+  8. promptComposer.buildTransformationSystemPrompt(classification)
+  9. LLM Call 2 (IELTS) → TransformationSchema (corrections + vocab + rewrite)
+     OR: LLM single call (Daily) → TransformationSchema
+  10. Validate JSON schema; auto-retry nếu invalid
+  11. saveFeedback() → AiFeedbackEntity
+  12. entry.markProcessed()
+  13. triggerPostProcessing():
+       → AnalyticsService.updateAfterFeedback()
+       → MistakeTrackerService.trackFromFeedback()
+  14. publishVocabularyEvent() → Kafka (AiFeedbackGeneratedMessage)
        │
-       ▼ (async, Kafka consumer)
-AiFeedbackGeneratedConsumer → VocabularyExtractorService.extractFromFeedback()
+       ▼ (Kafka / future — hiện tại cũng dùng @EventListener)
+VocabularyExtractorService.extractFromFeedback()
   - Parse vocabularySuggestions từ AI feedback
-  - Nếu từ chưa có → tạo VocabularyItem mới
-  - Nếu từ đã có → incrementEncounterCount
+  - Upsert VocabularyItem
+  - autoCreateClozeCard() → Flashcard(type=CLOZE)
 ```
 
 **Error handling:**
-- Nếu AI gọi thất bại → retry (Resilience4j `@Retry`)
-- Sau khi retry hết → WritingEntry status = FAILED, AiRequest status = FAILED
-- Kafka consumer không ack → Kafka redeliver
+- `AI_RESPONSE_INVALID` → auto-retry 1 lần với error context trong prompt
+- Infra failure → Resilience4j `@Retry(name="aiOrchestration")` — transient errors
+- Sau khi retry hết → `AiFailureMarkingService.markFailed()` → entry=FAILED, request=FAILED
+- Post-processing failure → log.warn, không fail pipeline chính (fire-and-forget)
 
 ---
 
 ### AI Provider Routing
 
-- Default provider: `OPENAI`
-- Fallback provider: `CLAUDE`
-- Nếu primary lỗi → tự động chuyển sang fallback
-- Nếu cả 2 đều lỗi → `AI_001`
+- Default provider: `GEMINI` (hiện tại), cấu hình qua `lexi.ai.default-provider`
+- Fallback provider: `OPENAI` hoặc `CLAUDE`
+- BYOK ưu tiên trước: Gemini key → OpenAI key → server key
+- Nếu tất cả fail → `AI_PROVIDER_UNAVAILABLE`
+
+---
+
+## Module 4B — AI Prompt Engine (3-Tier Architecture)
+
+Đây là phần quan trọng nhất về system design. Hiểu rõ cái này → hiểu cách build AI app enterprise-grade.
+
+### Vấn đề với naive approach
+
+```
+❌ Sai: 1 giant prompt hardcode mọi thứ
+   → Không personalize được
+   → Không A/B test được
+   → Token waste (luôn gửi mọi thứ dù không cần)
+
+❌ Sai: 100 prompt files hardcode mọi combination
+   → 3 modes × 5 styles × 6 essay_types × 7 bands = 630+ files
+   → Nightmare để maintain
+```
+
+### Kiến trúc đúng: Prompt Composition
+
+```
+Final Prompt = [mode block] + [essay_type block?] + [band block?] + [weakness blocks?] + [pipeline block] + [schema block]
+
+Key insight: optional blocks gracefully skipped nếu file không tồn tại
+→ 10-20 reusable blocks → hàng ngàn valid combinations
+```
+
+### Tier 1 — ClassificationEngine (Zero cost, zero latency)
+
+```java
+WritingClassification classify(entry, style, userId)
+```
+
+| Input | Detection | Output |
+|-------|-----------|--------|
+| `topicPrompt` | Keyword matching | `EssayType` |
+| `topicPrompt` | Keyword matching | `Task1Type` |
+| `CorrectionStyle` | Enum mapping | `TargetBand` |
+| `userId` | DB query (top 2) | `List<String> userWeaknesses` |
+
+**Tại sao không dùng AI để classify?**
+→ Keyword detection: 0ms, 0 tokens, deterministic. AI classify: ~500 tokens trước khi vào pipeline → không đáng.
+
+**EssayType detection rules:**
+```
+"to what extent" / "do you agree" / "give your opinion" → OPINION
+"discuss both" / "some people...others" → DISCUSSION
+"advantages and disadvantages" / "outweigh" → ADVANTAGES_DISADVANTAGES
+"problem"/"cause" + "solution" → PROBLEM_SOLUTION
+2+ question marks → DOUBLE_QUESTION
+fallback → DIRECT_QUESTION
+```
+
+**userWeaknesses từ đâu?**
+→ `recurring_mistakes` table: mỗi khi AI trả correction, `MistakeTrackerService` upsert mistake_type (GRAMMAR, WORD_CHOICE, STRUCTURE...). Top 2 by occurrence_count được inject vào prompt.
+
+### Tier 2 — PromptComposer (Dynamic assembly)
+
+```java
+// buildScoringSystemPrompt(WritingClassification ctx)
+List<String> blocks = []
+blocks += load("modes/ielts-task2.txt")           // required — throws nếu thiếu
+blocks += loadOptional("essay_type/opinion.txt")  // optional — "" nếu thiếu
+blocks += loadOptional("band/band_7_5.txt")       // optional
+blocks += loadOptional("weakness/GRAMMAR.txt")    // optional (max 2)
+blocks += load("pipeline/call1-scoring.txt")      // required
+blocks += load("core/anti-hallucination.txt")     // required
+blocks += load("core/json-schema-call1.txt")      // required
+return joinNonBlank(blocks)
+```
+
+**`loadOptional()` vs `load()`:**
+- `load()`: required block → throw `IllegalStateException` nếu file thiếu (fast-fail at startup)
+- `loadOptional()`: optional block → return `""` nếu thiếu → safe to add new block types without migration
+
+### Tier 3 — Prompt Block Files
+
+```
+resources/prompts/
+  modes/       → define context: "You are evaluating an IELTS Task 2 essay"
+  essay_type/  → define task-specific rules: opinion vs discussion vs problem-solution
+  task1_type/  → define chart-specific guidance: bar chart vs process vs map
+  band/        → define scoring calibration: Band 6.5 vs 7.0 vs 7.5 vs 8.0
+  weakness/    → define user-specific focus: "This user has GRAMMAR errors, pay extra attention to..."
+  styles/      → define transformation style: grammar-only vs natural vs native
+  pipeline/    → define call objective: Call 1 = score only (no rewrite context)
+  core/        → define output format + hallucination rules (always included)
+```
+
+**Tại sao file-based thay vì DB `prompt_templates`?**
+- Git version control: `git diff` thấy ngay thay đổi prompt
+- No migration needed khi sửa content
+- `prompt_templates` table vẫn giữ trong DB → future: admin UI + A/B testing
+
+### Tại sao Call 1 không có style block?
+
+```
+Call 1 (Scoring):
+  modes/ + essay_type/ + band/ + weakness/ + call1-scoring.txt
+
+Call 2 (Transformation):
+  modes/ + styles/ + essay_type/ + weakness/ + call2-transformation.txt
+```
+
+`call1-scoring.txt` explicit: "Evaluate the ORIGINAL text. Do NOT produce rewrites."  
+Nếu để style block (native rewrite) vào Call 1 → LLM biết nó sẽ rewrite → tends to inflate score.  
+**Tách riêng → score phản ánh bài gốc, không bị bias bởi transformation context.**
+
+### A/B Testing prompt blocks (future)
+
+```
+Muốn test: band_7_5.txt v1 vs v2
+→ Tạo: band_7_5_v2.txt
+→ Config flag: "ab.test.band-prompt=v2"
+→ PromptComposer đọc flag → chọn file đúng
+→ So sánh feedback quality + user satisfaction sau N submissions
+```
+
+Đây là lý do file-based + composition mạnh hơn hardcoded prompt.
 
 ---
 
@@ -723,6 +848,186 @@ Nếu dùng `@EventListener` thường, listener chạy trong cùng thread + tra
 
 ### Scale lên Kafka (future)
 Khi cần scale, thêm lại `kafkaTemplate.send()` trong `WritingService` song song với Spring event. `WritingSubmittedConsumer` (Kafka `@KafkaListener`) đã sẵn sàng tiếp nhận.
+
+---
+
+## System Design Decisions — WHY
+
+Phần này quan trọng cho system design thinking. Mỗi quyết định đều có trade-off.
+
+### 1. Tại sao 2-call IELTS pipeline thay vì 1-call?
+
+```
+❌ 1-call: "Score the essay AND provide corrections and rewrites"
+   → LLM biết nó sẽ rewrite → tends to score higher (bias)
+   → Thực nghiệm: 1-call scoring sau khi thấy rewrite context → +0.3~0.5 band inflate
+
+✅ 2-call:
+   Call 1: "Evaluate the ORIGINAL text only. Return ONLY scores."
+   Call 2: "Now provide corrections and rewrites." (không có score context)
+   → Score của Call 1 = unbiased evaluation of original text
+```
+
+**Trade-off**: 2× token cost, 2× latency. Nhưng accuracy cao hơn → acceptable cho IELTS app.
+
+### 2. Tại sao @Async + @EventListener thay vì Kafka (hiện tại)?
+
+```
+Kafka cần: broker running, topic config, consumer group, offset management
+@Async cần: thread pool config (1 line)
+
+MVP: @Async đủ — 1 user, 1 entry, 1 AI call
+Scale: Kafka — N consumers competing, horizontal scale, replay on failure
+```
+
+**Key design choice**: Kafka topics và message schema đã được define (`KafkaTopics.java`, `WritingSubmittedMessage`). Khi cần scale → chỉ swap publisher + listener, **zero change to business logic**.
+
+### 3. Tại sao refresh token lưu Redis thay vì DB?
+
+| | Redis | DB |
+|--|--|--|
+| Invalidation | O(1) DEL → immediate | UPDATE + index lookup |
+| Auto-expire | TTL built-in | Cần cleanup job |
+| Read per request | Cache hit ~1ms | DB query ~10ms |
+| Persistence | Optional (if needed) | Always |
+
+**Rotation security**: mỗi refresh → token cũ DEL ngay → nếu attacker dùng old token → miss → 401 → detect theft. DB approach phải mark `is_revoked=true` → slower + không atomic.
+
+### 4. Tại sao keyword classification thay vì AI-based?
+
+```
+AI classify: gọi thêm 1 LLM call → ~500 tokens → ~$0.0001 per request
+             + latency ~500ms
+             + non-deterministic (same input → different output sometimes)
+
+Keyword match: 0ms, 0 cost, deterministic, testable với unit test
+               Accuracy ~90% cho IELTS task types phổ biến (đủ tốt)
+```
+
+**Khi nào dùng AI để classify**: input quá phức tạp, nhiều ambiguity, hoặc classification ảnh hưởng trực tiếp đến business outcome quan trọng (ví dụ: content moderation). IELTS task type detection không cần AI-level accuracy.
+
+### 5. Tại sao running average thay vì raw aggregation?
+
+```sql
+-- ❌ Raw approach: O(n) mỗi lần cần metric
+SELECT AVG(grammar_accuracy) FROM writing_analytics WHERE user_id = ?
+
+-- ✅ Running average: O(1) update
+new_avg = (old_avg * count + new_value) / (count + 1)
+UPDATE user_progress SET avg_grammar_accuracy = new_avg, entry_count = count + 1
+```
+
+**Trade-off**: running avg không chính xác 100% (floating point drift sau nhiều updates), nhưng với N < 10,000 entries per user → acceptable. Benefit: `/api/v1/analytics/progress` trả về O(1) thay vì O(n) query.
+
+### 6. Tại sao fire-and-forget cho post-processing?
+
+```java
+try { analyticsService.update(snapshot); } catch { log.warn; }
+try { mistakeTrackerService.track(...); } catch { log.warn; }
+// Không throw → không fail main pipeline
+```
+
+**SLA thinking**: User expects AI feedback trong 30s. Analytics update failure → không ảnh hưởng user experience ngay lập tức. Tradeoff: analytics có thể miss 1 entry nếu DB lỗi thoáng qua. Acceptable for MVP; production → queue-based post-processing với retry.
+
+### 7. Tại sao CLOZE flashcard thay vì BASIC?
+
+```
+BASIC: Q="What does 'proliferate' mean?" A="To increase rapidly"
+  → Passive recall — nhớ definition nhưng không dùng được trong bài viết
+
+CLOZE: "The use of smartphones has ___ in recent years." A="proliferated"
+  → Active production — biết dùng trong context
+  → IELTS graders score on USAGE, not just MEANING
+```
+
+**Auto-generate**: `VocabularyExtractorService.autoCreateClozeCard()` dùng `exampleSentence` từ AI feedback → replace target word bằng `___` → instant CLOZE card. Không cần user manually tạo.
+
+### 8. Tại sao top 2 weakness trong prompt, không nhiều hơn?
+
+```
+0 weakness → generic feedback, no personalization
+1 weakness → okay, có personalization
+2 weakness → sweet spot: focused coaching, không overwhelm
+3+ weakness → prompt bloat → LLM bị distracted → quality giảm
+             → token cost tăng không đáng
+```
+
+Threshold được chọn empirically. Có thể config thành `lexi.ai.max-weakness-injection` sau nếu cần A/B test.
+
+---
+
+## Module Dependency Map
+
+```
+┌──────────┐   ┌──────────┐   ┌──────────────┐
+│  auth/   │   │  user/   │   │  writing/    │
+└──────────┘   └──────────┘   └──────────────┘
+                                      │
+                                      ↓ WritingSubmittedEvent
+                         ┌────────────────────────┐
+                         │   ai/orchestration/    │
+                         │  AiOrchestrationService│
+                         └────────────────────────┘
+                           │           │         │
+              ┌────────────┘    ┌──────┘    ┌────┘
+              ↓                 ↓           ↓
+      ai/classification/   ai/prompt/   ai/provider/
+      ClassificationEngine PromptComposer OpenAI/Claude/Gemini
+              │
+              ↓ (query top weaknesses)
+          review/RecurringMistakeRepository
+              │
+              ↓ (after saveFeedback)
+    ┌─────────────────────────────┐
+    │    triggerPostProcessing    │
+    └─────────────────────────────┘
+           │                │
+           ↓                ↓
+    analytics/         review/
+    AnalyticsService   MistakeTrackerService
+           │
+           ↓ publishVocabularyEvent (Kafka)
+    vocabulary/
+    VocabularyExtractorService
+           │
+           ↓ autoCreateClozeCard
+    flashcard/
+    FlashcardService
+```
+
+**Dependency rule**: lower modules không import higher modules.
+- `ai/` không biết `flashcard/` — chỉ publish event
+- `vocabulary/` không import `ai/` — consume event
+- `analytics/` + `review/` chỉ được gọi từ `ai/orchestration/` (1 direction)
+
+---
+
+## Scalability Path
+
+```
+MVP (hiện tại):
+  HTTP → @EventListener → @Async(aiTaskExecutor) → LLM API
+
+Scale Step 1: Kafka active
+  HTTP → Kafka(writing.submitted) → WritingSubmittedConsumer → LLM API
+  Benefit: multiple consumers competing → parallel AI processing
+
+Scale Step 2: Service separation
+  WritingService (write API only)
+  AiProcessorService (Kafka consumer + LLM)
+  VocabularyService (Kafka consumer + extraction)
+
+Scale Step 3: Response caching
+  hash(originalText + mode + style) → Redis cache
+  Cache hit → return saved feedback instantly, 0 LLM cost
+  Benefit: same essay submitted by 2 users → 2nd is free
+
+Scale Step 4: Prompt versioning via DB
+  prompt_templates table (already defined)
+  Admin UI: edit prompt → version++, is_active=true
+  PromptLoader: load from DB instead of classpath
+  → Prompt changes without deploy, A/B test per user segment
+```
 
 ---
 
