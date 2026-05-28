@@ -1,0 +1,37 @@
+# ─── IDE ─────────────────────────────────────────────────────────────────────
+.idea/
+*.iml
+.vscode/
+*.suo
+*.user
+
+# ─── Claude Code ─────────────────────────────────────────────────────────────
+.claude/
+
+# ─── Java / Maven ────────────────────────────────────────────────────────────
+lexi/target/
+*.class
+*.jar
+!lexi/mvnw
+!lexi/mvnw.cmd
+
+# ─── Node / Next.js ──────────────────────────────────────────────────────────
+lexi-fe/node_modules/
+lexi-fe/.next/
+lexi-fe/out/
+lexi-fe/tsconfig.tsbuildinfo
+
+# ─── Environment & Secrets ───────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+!.env.local.example
+!.env.example
+
+# ─── Logs & OS ───────────────────────────────────────────────────────────────
+*.log
+.DS_Store
+Thumbs.db
+
+# ─── Misc ────────────────────────────────────────────────────────────────────
+lexi-fe/C:*
