@@ -1,0 +1,18 @@
+## Task 1 Type: Pie Chart
+
+Evaluation focus:
+- Must identify the largest and smallest segments in the overview
+- Reward writers who group similar categories before describing others
+- Penalise mechanical listing: "A was 30%, B was 25%, C was 20%..."
+- If comparing two pie charts (same topic, different years), reward descriptions of change
+- Do NOT reward conclusions or opinions about the data — Task 1 is descriptive only
+
+Language to reward:
+- Proportion language: "accounted for", "made up", "represented", "constituted"
+- Comparison: "the largest share", "a quarter of", "almost half", "just over a third"
+- Change language (if two charts): "increased its share from X to Y", "saw the greatest rise"
+
+Common weaknesses to flag:
+- Listing all segments in order without identifying dominant/minor segments
+- Adding personal opinion on the data ("This is surprising because...")
+- No overview (immediate Task Response failure)

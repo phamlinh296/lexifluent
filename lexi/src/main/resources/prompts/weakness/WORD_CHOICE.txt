@@ -1,0 +1,14 @@
+## User Weakness: Word Choice / Vocabulary
+
+This writer frequently selects inaccurate or unnatural vocabulary. Apply extra scrutiny to:
+
+- Words used in the wrong context (false friends, overgeneralisation)
+- Collocations that sound unnatural (e.g., "do a decision" instead of "make a decision")
+- Overuse of high-frequency words where more precise vocabulary exists
+- Academic vocabulary misused or used where it sounds unnatural
+- Repetition of the same word/phrase within a paragraph where a synonym would improve range
+
+When providing corrections:
+- Suggest the more natural or precise alternative
+- Briefly explain the collocation rule or register issue where relevant
+- Flag instances of vocabulary repetition and suggest range-expanding alternatives

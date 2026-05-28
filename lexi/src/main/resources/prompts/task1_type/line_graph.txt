@@ -1,0 +1,18 @@
+## Task 1 Type: Line Graph
+
+Evaluation focus:
+- Must describe overall trends (rising, falling, fluctuating, stable) — not just individual data points
+- Overview must identify the most significant trend across the period
+- Reward writers who describe trends accurately: "rose sharply", "declined gradually", "remained relatively stable"
+- Penalise point-by-point data description without identifying trends
+- If multiple lines are shown, reward comparisons between them at key time points
+
+Language to reward:
+- Trend verbs: "rose", "fell", "increased", "declined", "fluctuated", "levelled off", "peaked at"
+- Adverbs of degree: "sharply", "steadily", "dramatically", "slightly", "gradually"
+- Comparative constructions at intersections: "overtook", "caught up with", "widened the gap"
+
+Common weaknesses to flag:
+- Describing each year's value individually without identifying the overall trend
+- Missing the overview paragraph
+- Using incorrect trend language (e.g., "increased" for a value that fluctuated)

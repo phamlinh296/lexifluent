@@ -17,12 +17,27 @@ public class PromptLoader {
         return cache.computeIfAbsent(relativePath, this::read);
     }
 
+    // Returns empty string if the file does not exist — used for optional prompt blocks
+    public String loadOptional(String relativePath) {
+        return cache.computeIfAbsent(relativePath, this::readOptional);
+    }
+
     private String read(String path) {
         try {
             return new ClassPathResource("prompts/" + path)
                     .getContentAsString(StandardCharsets.UTF_8);
         } catch (IOException ex) {
             throw new IllegalStateException("Prompt file missing: prompts/" + path, ex);
+        }
+    }
+
+    private String readOptional(String path) {
+        try {
+            ClassPathResource resource = new ClassPathResource("prompts/" + path);
+            if (!resource.exists()) return "";
+            return resource.getContentAsString(StandardCharsets.UTF_8);
+        } catch (IOException ex) {
+            return "";
         }
     }
 }

@@ -1,0 +1,15 @@
+## User Weakness: Grammar Errors
+
+This writer has a recurring pattern of grammar mistakes. Apply extra scrutiny to:
+
+- Subject-verb agreement (especially with collective nouns or inverted sentences)
+- Tense consistency within and across paragraphs
+- Article usage (a/an/the/zero article) — especially common errors for non-native speakers
+- Relative clause formation (who/which/that + correct verb form)
+- Conditional sentences (if + tense combinations)
+- Passive voice formation (be + past participle)
+
+When providing corrections:
+- Explain WHY each grammar correction is necessary, not just what the correct form is
+- Group similar grammar errors together in your feedback to help the writer see the pattern
+- Provide the corrected sentence alongside the explanation

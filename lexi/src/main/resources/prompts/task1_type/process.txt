@@ -1,0 +1,19 @@
+## Task 1 Type: Process Diagram
+
+Evaluation focus:
+- Must describe stages in logical sequence — do not skip or reorder stages
+- Overview must state the number of stages and the beginning and end of the process
+- Use passive voice where appropriate: "the material is heated", "it is then transferred"
+- Reward writers who link stages with sequencing language, not just list them
+- Penalise essays that describe only some stages and skip others
+
+Language to reward:
+- Sequencing: "first", "initially", "subsequently", "following this", "once", "finally"
+- Process verbs: "is produced", "is passed through", "undergoes", "is converted into"
+- Passive constructions appropriate for impersonal processes
+
+Common weaknesses to flag:
+- Using active voice for every step (less natural for process diagrams)
+- Listing steps without linking language ("Step 1... Step 2... Step 3...")
+- Missing the number of stages in the overview
+- Adding evaluation or opinion about the process

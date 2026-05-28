@@ -1,0 +1,18 @@
+## Task 1 Type: Bar Chart
+
+Evaluation focus:
+- Must include a clear overview identifying the most significant trend or comparison (NOT a conclusion)
+- Data selection: reward writers who compare the highest/lowest values and note exceptions
+- Penalise essays that list every data point without grouping or comparison
+- Reward logical data grouping: e.g., grouping similar categories before contrasting them
+- Tense: use past simple for historical data, present simple for current/general data
+
+Language to reward:
+- Comparative language: "significantly higher than", "approximately double", "by contrast"
+- Approximate language: "roughly", "approximately", "just under/over"
+- Trend language: "the most notable feature", "the dominant category"
+
+Common weaknesses to flag:
+- No overview paragraph (immediate Task Response failure)
+- Merely listing numbers without making comparisons
+- Incorrect tense use (e.g., present tense for past data)

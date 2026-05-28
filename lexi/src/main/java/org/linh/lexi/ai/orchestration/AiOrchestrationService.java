@@ -8,6 +8,8 @@ import org.linh.lexi.ai.domain.AiFeedbackEntity;
 import org.linh.lexi.ai.domain.AiRequestEntity;
 import org.linh.lexi.ai.domain.AiRequestStatus;
 import org.linh.lexi.ai.event.AiFeedbackGeneratedMessage;
+import org.linh.lexi.ai.classification.ClassificationEngine;
+import org.linh.lexi.ai.classification.WritingClassification;
 import org.linh.lexi.ai.provider.AiCompletion;
 import org.linh.lexi.ai.provider.AiProviderRouter;
 import org.linh.lexi.ai.provider.AiProviderType;
@@ -47,6 +49,7 @@ public class AiOrchestrationService {
 
     private final AiProviderRouter providerRouter;
     private final PromptComposer promptComposer;
+    private final ClassificationEngine classificationEngine;
     private final AiFeedbackSchemaValidator schemaValidator;
     private final AiRequestRepository aiRequestRepository;
     private final AiFeedbackRepository aiFeedbackRepository;
@@ -96,9 +99,12 @@ public class AiOrchestrationService {
             String userPrompt = promptComposer.buildUserPrompt(
                     entry.getOriginalText(), entry.getTopicPrompt(), cefrLevel);
 
+            WritingClassification classification = classificationEngine.classify(
+                    entry, entry.getCorrectionStyle(), message.userId());
+
             AiFeedbackEntity feedback = isIelts
-                    ? executeIeltsPipeline(entry, message.userId(), model, useStrong, userPrompt, primaryRequest, start)
-                    : executeDailyPipeline(entry, message.userId(), model, userPrompt, primaryRequest, start);
+                    ? executeIeltsPipeline(entry, message.userId(), model, useStrong, userPrompt, classification, primaryRequest, start)
+                    : executeDailyPipeline(entry, message.userId(), model, userPrompt, classification, primaryRequest, start);
 
             entry.markProcessed();
             writingEntryRepository.save(entry);
@@ -129,9 +135,10 @@ public class AiOrchestrationService {
     // IELTS: 2 calls — scoring first, transformation second
     // Separated so the examiner scores the raw text, not the model's own rewrites
     private AiFeedbackEntity executeIeltsPipeline(WritingEntry entry, UUID userId, String model, boolean useStrong,
-                                                   String userPrompt, AiRequestEntity scoringRequest, long globalStart) {
-        // Call 1: Scoring
-        String scoringSystem = promptComposer.buildScoringSystemPrompt(entry.getMode());
+                                                   String userPrompt, WritingClassification classification,
+                                                   AiRequestEntity scoringRequest, long globalStart) {
+        // Call 1: Scoring — enriched with essay type, band, and weakness context
+        String scoringSystem = promptComposer.buildScoringSystemPrompt(classification);
         AiRequest call1 = useStrong
                 ? AiRequest.strong(scoringSystem, userPrompt, model)
                 : AiRequest.cheap(scoringSystem, userPrompt, model);
@@ -151,8 +158,8 @@ public class AiOrchestrationService {
         applyCompletion(scoringRequest, scoringCompletion, (int) (System.currentTimeMillis() - globalStart));
         usageTracker.track(userId, scoringRequest.getId(), scoringCompletion);
 
-        // Call 2: Transformation
-        String transformSystem = promptComposer.buildTransformationSystemPrompt(entry.getMode(), entry.getCorrectionStyle());
+        // Call 2: Transformation — enriched with style, essay type, and weakness context
+        String transformSystem = promptComposer.buildTransformationSystemPrompt(classification);
         AiRequest call2 = useStrong
                 ? AiRequest.strong(transformSystem, userPrompt, model)
                 : AiRequest.cheap(transformSystem, userPrompt, model);
@@ -187,8 +194,9 @@ public class AiOrchestrationService {
 
     // Daily English: single call — transformation + analytics in one shot
     private AiFeedbackEntity executeDailyPipeline(WritingEntry entry, UUID userId, String model,
-                                                    String userPrompt, AiRequestEntity request, long start) {
-        String system = promptComposer.buildDailySystemPrompt(entry.getCorrectionStyle());
+                                                    String userPrompt, WritingClassification classification,
+                                                    AiRequestEntity request, long start) {
+        String system = promptComposer.buildDailySystemPrompt(classification);
         AiRequest call = AiRequest.cheap(system, userPrompt, model);
 
         AiCompletion completion;

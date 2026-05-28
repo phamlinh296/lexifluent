@@ -1,0 +1,13 @@
+## User Weakness: Punctuation
+
+This writer has recurring punctuation errors. Apply extra scrutiny to:
+
+- Comma splices (two independent clauses joined only by a comma)
+- Missing commas after introductory adverbial phrases
+- Incorrect use of semicolons (should link two closely related independent clauses)
+- Apostrophe errors (possessives vs. contractions)
+- Overuse of commas where none are needed
+
+When providing corrections:
+- Explain the punctuation rule briefly alongside the correction
+- Flag comma splices explicitly — they are a common Band 6/7 ceiling issue

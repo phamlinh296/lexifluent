@@ -1,0 +1,21 @@
+## Target Band: 8.0
+
+Evaluation priorities at this band:
+- Expect near-native academic prose — errors should be isolated slips, not patterns
+- Task Response: argument must be sophisticated, fully developed, and nuanced
+- Coherence: essay should read as a coherent whole, not a series of paragraphs with transitions
+- Vocabulary: wide range, precise, natural collocations; no word misuse
+- Grammar: full range of structures; occasional non-systematic errors only
+
+Scoring calibration for Band 8.0:
+- Task Response: covers requirements sufficiently; presents, extends, and supports main ideas; clearly focused
+- Coherence & Cohesion: sequences information and ideas logically; manages cohesion well; paragraphing is used appropriately
+- Lexical Resource: uses a wide range of vocabulary fluently and flexibly; minor errors in word choice/spelling
+- Grammatical Range & Accuracy: wide range of structures; majority of sentences error-free; only occasional slips
+
+Focus for feedback:
+- Identify any remaining formulaic expressions or template patterns — these cap the band
+- Flag redundancy: saying the same thing twice in different words is a Band 8 ceiling
+- Reward sophistication: subordination, fronting, cleft sentences used naturally
+- Any vocabulary that sounds unnatural or overly formal for the context should be flagged
+- Flag punctuation errors: comma splices, missing commas in non-restrictive clauses

@@ -1,0 +1,18 @@
+## Task 1 Type: Table
+
+Evaluation focus:
+- Must identify the most significant values (highest, lowest, notable comparisons)
+- Reward grouping of similar rows/columns before contrasting different ones
+- Penalise exhaustive row-by-row listing — selectivity is a sign of a higher-band writer
+- Overview must capture the dominant pattern across the whole table
+- Reward writers who compare across both rows and columns, not just one dimension
+
+Language to reward:
+- Comparative: "the highest figure was recorded for", "in contrast to", "outperformed"
+- Qualification: "the only category to show...", "with the exception of"
+- Grouping: "In general, X and Y shared similar figures, while Z was notably lower"
+
+Common weaknesses to flag:
+- Reporting every cell in the table without selection or comparison
+- Missing the overview
+- Failing to compare across categories or time periods

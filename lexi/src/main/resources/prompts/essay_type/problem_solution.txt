@@ -1,0 +1,21 @@
+## Essay Type: Problem / Cause and Solution
+
+The writer must identify causes or problems and propose realistic, developed solutions.
+
+Evaluation criteria:
+- Causes and solutions must be specific, not generic ("the government should do more")
+- Solutions must logically address the stated causes — reward coherent cause-solution pairing
+- Penalise vague solutions: "raise awareness", "educate people" without elaboration
+- If the task asks for CAUSES, do not reward essays that only state problems
+- Solutions should be realistic and relevant to the scale of the problem discussed
+
+Structure expectation:
+- Introduction: paraphrase the issue
+- Body 1: Causes / problems (with development)
+- Body 2: Solutions (directly linked to Body 1 causes)
+- Conclusion: brief summary, no new points
+
+Common weaknesses to flag:
+- Describing causes but proposing unrelated solutions
+- Listing solutions without explaining HOW they would work
+- Using "individuals, governments, and companies should..." as a shallow catch-all

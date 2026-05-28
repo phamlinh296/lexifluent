@@ -1,0 +1,19 @@
+## Target Band: 7.0
+
+Evaluation priorities at this band:
+- Task Response: all parts of the task must be addressed; ideas should be developed with explanation
+- Coherence: logical progression of ideas; paragraph unity; less reliance on mechanical transitions
+- Vocabulary: some less common vocabulary used appropriately; minor inaccuracies acceptable
+- Grammar: a range of complex structures used with generally good control; few errors
+
+Scoring calibration for Band 7.0:
+- Task Response: all parts addressed; main ideas extended and supported though some may be under-developed
+- Coherence & Cohesion: information is logically organised; a range of cohesive devices; some overuse
+- Lexical Resource: uses some less common vocabulary; aware of collocation; some inaccuracies
+- Grammatical Range & Accuracy: variety of complex structures; mostly error-free; some minor slips
+
+Focus for feedback:
+- Flag over-reliance on simple sentence structures where complex structures would score higher
+- Identify vocabulary that is overused or miscollocated
+- Flag transitions that are correct but mechanical (e.g., starting every paragraph with "Firstly")
+- Reward well-developed paragraphs with example + explanation

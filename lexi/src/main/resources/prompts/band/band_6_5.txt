@@ -1,0 +1,19 @@
+## Target Band: 6.5
+
+Evaluation priorities at this band:
+- Focus feedback on HIGH-IMPACT errors only — do not over-correct minor stylistic choices
+- Grammar: flag frequent errors in complex structures (relative clauses, conditionals, passive)
+  but accept occasional minor errors in simple structures
+- Vocabulary: reward range and effort; flag repetition and misuse of academic words
+- Coherence: flag missing or misused linking devices; basic paragraph structure is acceptable
+- Task Response: essay must address the task; weak development is acceptable, off-topic is not
+
+Scoring calibration for Band 6.5:
+- Task Response: main idea addressed, some under-development; key task requirements partially met
+- Coherence & Cohesion: some organisation; linking devices present but sometimes mechanical
+- Lexical Resource: adequate vocabulary; some inaccuracies in word choice; limited range
+- Grammatical Range & Accuracy: some complex structures attempted; frequent errors but meaning is clear
+
+Feedback tone:
+- Focus on 2–3 most impactful improvements, not an exhaustive list
+- Acknowledge what the writer is doing correctly to motivate improvement
