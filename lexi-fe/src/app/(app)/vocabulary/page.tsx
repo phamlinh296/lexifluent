@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useVocabularyList, useWeakVocabulary } from '@/hooks/useVocabulary';
+import { useFlashcards, useCreateFlashcard } from '@/hooks/useFlashcards';
 import { VocabCard } from '@/components/vocabulary/VocabCard';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import type { CefrLevel } from '@/types/api';
+import type { CefrLevel, VocabularyItem } from '@/types/api';
 
 const CEFR_OPTIONS: (CefrLevel | 'ALL')[] = ['ALL', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
@@ -14,17 +15,42 @@ export default function VocabularyPage() {
   const [search, setSearch] = useState('');
   const [cefrFilter, setCefrFilter] = useState<CefrLevel | 'ALL'>('ALL');
   const [page, setPage] = useState(0);
+  // Track vocab items saved as flashcard in this session
+  const [sessionSaved, setSessionSaved] = useState<Set<string>>(new Set());
 
   const allQuery = useVocabularyList(page, 30);
   const weakQuery = useWeakVocabulary(page, 20);
   const activeQuery = tab === 'all' ? allQuery : weakQuery;
   const { data, isLoading } = activeQuery;
 
+  const { data: allFlashcards = [] } = useFlashcards(false);
+  const createFlashcard = useCreateFlashcard();
+
+  // Build set of vocabulary item IDs that already have a flashcard
+  const savedVocabIds = useMemo(
+    () => new Set(allFlashcards.map((f) => f.vocabularyItemId).filter(Boolean) as string[]),
+    [allFlashcards],
+  );
+
   const filtered = (data?.content ?? []).filter((v) => {
     const matchSearch = !search || v.word.toLowerCase().includes(search.toLowerCase());
     const matchCefr = cefrFilter === 'ALL' || v.cefrLevel === cefrFilter;
     return matchSearch && matchCefr;
   });
+
+  function handleAddFlashcard(item: VocabularyItem) {
+    createFlashcard.mutate(
+      {
+        front: item.word,
+        back: [item.definition, item.exampleSentence ? `Ví dụ: ${item.exampleSentence}` : '']
+          .filter(Boolean)
+          .join('\n'),
+        cefrLevel: item.cefrLevel ?? undefined,
+        vocabularyItemId: item.id,
+      },
+      { onSuccess: () => setSessionSaved((prev) => new Set(prev).add(item.id)) },
+    );
+  }
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -72,7 +98,14 @@ export default function VocabularyPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {filtered.map((v) => <VocabCard key={v.id} item={v} />)}
+          {filtered.map((v) => (
+            <VocabCard
+              key={v.id}
+              item={v}
+              onAddFlashcard={() => handleAddFlashcard(v)}
+              isSaved={savedVocabIds.has(v.id) || sessionSaved.has(v.id)}
+            />
+          ))}
         </div>
       )}
 

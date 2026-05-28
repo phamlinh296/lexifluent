@@ -111,7 +111,12 @@ export default function FlashcardsPage() {
   const currentCard = studyDeck[studyIndex];
 
   function startStudy() {
-    const deck = dueCards.length > 0 ? [...dueCards] : [...allCards];
+    // Always study all cards; due cards sorted to front
+    const deck = [...allCards].sort((a, b) => {
+      if (a.isDue && !b.isDue) return -1;
+      if (!a.isDue && b.isDue) return 1;
+      return 0;
+    });
     setStudyDeck(deck);
     setStudyIndex(0);
     setMode('study');
@@ -160,13 +165,13 @@ export default function FlashcardsPage() {
         <div>
           <h1 className="text-2xl font-bold">Flashcard</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {allCards.length} thẻ · {dueCards.length} cần ôn hôm nay
+            {allCards.length} thẻ{dueCards.length > 0 && ` · ${dueCards.length} đến hạn hôm nay`}
           </p>
         </div>
         {allCards.length > 0 && (
           <Button onClick={startStudy} className="gap-2">
             <RotateCcw className="h-4 w-4" />
-            {dueCards.length > 0 ? `Ôn ${dueCards.length} thẻ hôm nay` : 'Ôn tất cả'}
+            Ôn tất cả
           </Button>
         )}
       </div>

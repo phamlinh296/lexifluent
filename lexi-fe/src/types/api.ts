@@ -248,6 +248,7 @@ export interface Flashcard {
   front: string;
   back: string;
   cefrLevel: CefrLevel | null;
+  vocabularyItemId: string | null;
   easeFactor: number;
   intervalDays: number;
   reviewCount: number;
