@@ -1,0 +1,19 @@
+-- ============================================================
+-- V6: Align flashcards table with Flashcard entity
+-- Missing: vocabulary_item_id (was vocabulary_id), cefr_level,
+--          SM-2 fields, BaseEntity audit columns
+--
+-- NOTE: Commented out — local dev dùng ddl-auto:update (Hibernate tự sync).
+--       Uncomment khi enable Flyway cho production.
+-- ============================================================
+
+-- ALTER TABLE flashcards
+--     RENAME COLUMN vocabulary_id  TO vocabulary_item_id,
+--     ADD COLUMN cefr_level        VARCHAR(2),
+--     ADD COLUMN ease_factor       DOUBLE       NOT NULL DEFAULT 2.5,
+--     ADD COLUMN interval_days     INT          NOT NULL DEFAULT 0,
+--     ADD COLUMN review_count      INT          NOT NULL DEFAULT 0,
+--     ADD COLUMN next_review_at    DATETIME(6),
+--     ADD COLUMN last_reviewed_at  DATETIME(6),
+--     ADD COLUMN created_by        VARCHAR(255),
+--     ADD COLUMN updated_by        VARCHAR(255);
