@@ -20,15 +20,18 @@ public class ClassificationEngine {
         WritingMode mode = entry.getMode();
         String prompt = entry.getTopicPrompt();
 
-        EssayType essayType = mode == WritingMode.IELTS_TASK2
-                ? detectEssayType(prompt)
-                : EssayType.NOT_APPLICABLE;
+        // Explicit value from user → use directly; fallback to keyword detection
+        EssayType essayType = entry.getEssayType() != null
+                ? entry.getEssayType()
+                : (mode == WritingMode.IELTS_TASK2 ? detectEssayType(prompt) : EssayType.NOT_APPLICABLE);
 
-        Task1Type task1Type = mode == WritingMode.IELTS_TASK1
-                ? detectTask1Type(prompt)
-                : Task1Type.NOT_APPLICABLE;
+        Task1Type task1Type = entry.getTask1Type() != null
+                ? entry.getTask1Type()
+                : (mode == WritingMode.IELTS_TASK1 ? detectTask1Type(prompt) : Task1Type.NOT_APPLICABLE);
 
-        TargetBand targetBand = resolveTargetBand(style);
+        TargetBand targetBand = entry.getTargetBand() != null
+                ? entry.getTargetBand()
+                : resolveTargetBand(style);
 
         List<String> weaknesses = mistakeRepository
                 .findByUserIdOrderByOccurrenceCountDesc(userId)

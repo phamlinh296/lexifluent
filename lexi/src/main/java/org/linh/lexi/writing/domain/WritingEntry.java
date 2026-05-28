@@ -2,6 +2,9 @@ package org.linh.lexi.writing.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.linh.lexi.ai.classification.EssayType;
+import org.linh.lexi.ai.classification.Task1Type;
+import org.linh.lexi.ai.classification.TargetBand;
 import org.linh.lexi.common.audit.BaseEntity;
 import org.linh.lexi.user.domain.User;
 
@@ -28,6 +31,18 @@ public class WritingEntry extends BaseEntity {
     @Column(name = "correction_style", nullable = false)
     @Builder.Default
     private CorrectionStyle correctionStyle = CorrectionStyle.GRAMMAR_CORRECTION;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "essay_type")
+    private EssayType essayType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "task1_type")
+    private Task1Type task1Type;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "target_band")
+    private TargetBand targetBand;
 
     private String title;
 

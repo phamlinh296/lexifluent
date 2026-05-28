@@ -1,11 +1,13 @@
 package org.linh.lexi.writing.service;
 
 import lombok.RequiredArgsConstructor;
+import org.linh.lexi.ai.classification.TargetBand;
 import org.linh.lexi.common.exception.ErrorCode;
 import org.linh.lexi.common.exception.LexiException;
 import org.linh.lexi.common.response.PageResponse;
 import org.linh.lexi.user.domain.User;
 import org.linh.lexi.user.repository.UserRepository;
+import org.linh.lexi.writing.domain.CorrectionStyle;
 import org.linh.lexi.writing.domain.WritingEntry;
 import org.linh.lexi.writing.domain.WritingMode;
 import org.linh.lexi.writing.domain.WritingStatus;
@@ -39,7 +41,10 @@ public class WritingService {
         WritingEntry entry = WritingEntry.builder()
                 .user(user)
                 .mode(request.mode())
-                .correctionStyle(request.correctionStyle())
+                .correctionStyle(deriveStyle(request))
+                .essayType(request.essayType())
+                .task1Type(request.task1Type())
+                .targetBand(request.targetBand())
                 .title(request.title())
                 .originalText(request.text())
                 .topicPrompt(request.topicPrompt())
@@ -70,6 +75,19 @@ public class WritingService {
         return writingEntryRepository.findByIdAndUserIdAndDeletedAtIsNull(entryId, userId)
                 .map(writingMapper::toDto)
                 .orElseThrow(() -> new LexiException(ErrorCode.WRITING_NOT_FOUND));
+    }
+
+    // IELTS: derive correctionStyle from targetBand (cheap vs strong model decision)
+    // Daily English: correctionStyle required (GRAMMAR/NATURAL/NATIVE)
+    private CorrectionStyle deriveStyle(SubmitWritingRequest request) {
+        if (request.correctionStyle() != null) return request.correctionStyle();
+        if (request.targetBand() != null) {
+            return switch (request.targetBand()) {
+                case BAND_7_5, BAND_8_0, BAND_8_5 -> CorrectionStyle.IELTS_BAND_7_8;
+                default -> CorrectionStyle.IELTS_BAND_6;
+            };
+        }
+        return CorrectionStyle.GRAMMAR_CORRECTION;
     }
 
     @Transactional
