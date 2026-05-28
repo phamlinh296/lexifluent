@@ -1,18 +1,23 @@
 package org.linh.lexi.flashcard.service;
 
 import lombok.RequiredArgsConstructor;
+import org.linh.lexi.analytics.domain.UserProgress;
+import org.linh.lexi.analytics.repository.UserProgressRepository;
 import org.linh.lexi.common.exception.ErrorCode;
 import org.linh.lexi.common.exception.LexiException;
 import org.linh.lexi.flashcard.domain.Flashcard;
 import org.linh.lexi.flashcard.domain.FlashcardType;
 import org.linh.lexi.flashcard.dto.CreateFlashcardRequest;
 import org.linh.lexi.flashcard.dto.FlashcardDto;
+import org.linh.lexi.flashcard.dto.FlashcardStatsDto;
 import org.linh.lexi.flashcard.dto.ReviewFlashcardRequest;
 import org.linh.lexi.flashcard.repository.FlashcardRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,10 +26,10 @@ import java.util.UUID;
 public class FlashcardService {
 
     private final FlashcardRepository repository;
+    private final UserProgressRepository progressRepository;
 
     @Transactional
     public FlashcardDto create(UUID userId, CreateFlashcardRequest request) {
-        // Skip if already saved from same vocab source
         if (request.vocabularyItemId() != null
                 && repository.existsByUserIdAndVocabularyItemId(userId, request.vocabularyItemId())) {
             return repository.findByUserIdAndFrontIgnoreCase(userId, request.front())
@@ -72,7 +77,9 @@ public class FlashcardService {
             throw new LexiException(ErrorCode.ACCESS_DENIED);
         }
         card.applyReview(request.quality());
-        return FlashcardDto.from(repository.save(card));
+        FlashcardDto result = FlashcardDto.from(repository.save(card));
+        updateFlashcardStreak(userId);
+        return result;
     }
 
     @Transactional
@@ -83,5 +90,28 @@ public class FlashcardService {
             throw new LexiException(ErrorCode.ACCESS_DENIED);
         }
         repository.delete(card);
+    }
+
+    @Transactional(readOnly = true)
+    public FlashcardStatsDto getStats(UUID userId) {
+        int streak = progressRepository.findByUserId(userId)
+                .map(UserProgress::getFlashcardStreak)
+                .orElse(0);
+        return new FlashcardStatsDto(streak);
+    }
+
+    private void updateFlashcardStreak(UUID userId) {
+        UserProgress progress = progressRepository.findByUserId(userId)
+                .orElseGet(() -> UserProgress.builder().userId(userId).build());
+        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        LocalDate last = progress.getLastFlashcardDate();
+        if (last == null || last.isBefore(today.minusDays(1))) {
+            progress.setFlashcardStreak(1);
+        } else if (last.equals(today.minusDays(1))) {
+            progress.setFlashcardStreak(progress.getFlashcardStreak() + 1);
+        }
+        // last == today → already counted, no change
+        progress.setLastFlashcardDate(today);
+        progressRepository.save(progress);
     }
 }

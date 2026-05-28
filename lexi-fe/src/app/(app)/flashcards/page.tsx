@@ -4,10 +4,12 @@ import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useFlashcards, useReviewFlashcard, useDeleteFlashcard } from '@/hooks/useFlashcards';
+import { useFlashcards, useFlashcardStats, useReviewFlashcard, useDeleteFlashcard } from '@/hooks/useFlashcards';
 import type { Flashcard } from '@/types/api';
 import { cefrColor } from '@/lib/utils';
-import { Trash2, RotateCcw } from 'lucide-react';
+import { Flame, RotateCcw, Trash2 } from 'lucide-react';
+
+const SESSION_LIMIT = 20;
 
 const QUALITY_LABELS = [
   { q: 0, label: 'Không nhớ', color: 'bg-red-500 hover:bg-red-600' },
@@ -16,9 +18,16 @@ const QUALITY_LABELS = [
   { q: 5, label: 'Dễ', color: 'bg-green-500 hover:bg-green-600' },
 ];
 
+const TYPE_LABEL: Record<string, string> = {
+  CLOZE: 'Điền chỗ trống',
+  COLLOCATION: 'Collocation',
+  GRAMMAR_CORRECTION: 'Sửa lỗi',
+};
+
 function StudyCard({ card, onReview }: { card: Flashcard; onReview: (q: number) => void }) {
   const [flipped, setFlipped] = useState(false);
   const isCloze = card.type === 'CLOZE';
+  const isCollocation = card.type === 'COLLOCATION';
 
   return (
     <div className="space-y-4">
@@ -34,6 +43,11 @@ function StudyCard({ card, onReview }: { card: Flashcard; onReview: (q: number) 
                   <p className="text-xs text-muted-foreground uppercase tracking-wide">Điền vào chỗ trống</p>
                   <p className="text-lg leading-relaxed font-medium">{card.front}</p>
                 </>
+              ) : isCollocation ? (
+                <>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide">Hoàn thành collocation</p>
+                  <p className="text-2xl font-bold tracking-wide">{card.front}</p>
+                </>
               ) : (
                 <p className="text-2xl font-bold">{card.front}</p>
               )}
@@ -46,7 +60,7 @@ function StudyCard({ card, onReview }: { card: Flashcard; onReview: (q: number) 
             </motion.div>
           ) : (
             <motion.div key="back" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              {isCloze ? (
+              {isCloze || isCollocation ? (
                 <p className="text-2xl font-bold text-primary">{card.back}</p>
               ) : (
                 <p className="text-sm whitespace-pre-wrap text-left">{card.back}</p>
@@ -70,6 +84,7 @@ function StudyCard({ card, onReview }: { card: Flashcard; onReview: (q: number) 
 }
 
 function FlashcardListItem({ card, onDelete }: { card: Flashcard; onDelete: () => void }) {
+  const typeLabel = TYPE_LABEL[card.type];
   return (
     <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors">
       <div className="flex items-center gap-3 min-w-0">
@@ -77,11 +92,18 @@ function FlashcardListItem({ card, onDelete }: { card: Flashcard; onDelete: () =
           <p className="font-medium text-sm">{card.front}</p>
           <p className="text-xs text-muted-foreground truncate max-w-xs">{card.back.split('\n')[0]}</p>
         </div>
-        {card.cefrLevel && (
-          <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${cefrColor(card.cefrLevel as never)}`}>
-            {card.cefrLevel}
-          </span>
-        )}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {card.cefrLevel && (
+            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${cefrColor(card.cefrLevel as never)}`}>
+              {card.cefrLevel}
+            </span>
+          )}
+          {typeLabel && (
+            <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+              {typeLabel}
+            </span>
+          )}
+        </div>
       </div>
       <div className="flex items-center gap-3 shrink-0">
         <div className="text-right text-xs text-muted-foreground hidden sm:block">
@@ -100,23 +122,25 @@ function FlashcardListItem({ card, onDelete }: { card: Flashcard; onDelete: () =
 export default function FlashcardsPage() {
   const [mode, setMode] = useState<'list' | 'study'>('list');
   const [studyIndex, setStudyIndex] = useState(0);
-  // Snapshot the deck when entering study mode — isolate from live query updates mid-session
   const [studyDeck, setStudyDeck] = useState<Flashcard[]>([]);
 
   const { data: allCards = [], isLoading } = useFlashcards(false);
   const { data: dueCards = [] } = useFlashcards(true);
+  const { data: stats } = useFlashcardStats();
   const reviewMutation = useReviewFlashcard();
   const deleteMutation = useDeleteFlashcard();
 
+  const streak = stats?.flashcardStreak ?? 0;
   const currentCard = studyDeck[studyIndex];
 
   function startStudy() {
-    // Always study all cards; due cards sorted to front
-    const deck = [...allCards].sort((a, b) => {
-      if (a.isDue && !b.isDue) return -1;
-      if (!a.isDue && b.isDue) return 1;
-      return 0;
-    });
+    const deck = [...allCards]
+      .sort((a, b) => {
+        if (a.isDue && !b.isDue) return -1;
+        if (!a.isDue && b.isDue) return 1;
+        return 0;
+      })
+      .slice(0, SESSION_LIMIT);
     setStudyDeck(deck);
     setStudyIndex(0);
     setMode('study');
@@ -159,11 +183,21 @@ export default function FlashcardsPage() {
     );
   }
 
+  const sessionSize = Math.min(allCards.length, SESSION_LIMIT);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Flashcard</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold">Flashcard</h1>
+            {streak > 0 && (
+              <span className="flex items-center gap-1 text-sm font-medium text-orange-500">
+                <Flame className="h-4 w-4" />
+                {streak} ngày
+              </span>
+            )}
+          </div>
           <p className="text-muted-foreground text-sm mt-1">
             {allCards.length} thẻ{dueCards.length > 0 && ` · ${dueCards.length} đến hạn hôm nay`}
           </p>
@@ -171,7 +205,7 @@ export default function FlashcardsPage() {
         {allCards.length > 0 && (
           <Button onClick={startStudy} className="gap-2">
             <RotateCcw className="h-4 w-4" />
-            Ôn tất cả
+            Ôn {sessionSize} thẻ
           </Button>
         )}
       </div>

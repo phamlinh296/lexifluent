@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/axios';
-import type { ApiResponse, CreateFlashcardRequest, Flashcard, ReviewFlashcardRequest } from '@/types/api';
+import type { ApiResponse, CreateFlashcardRequest, Flashcard, FlashcardStats, ReviewFlashcardRequest } from '@/types/api';
 
 export const flashcardsApi = {
   list: (dueOnly = false) =>
@@ -13,4 +13,7 @@ export const flashcardsApi = {
 
   delete: (id: string) =>
     apiClient.delete<ApiResponse<void>>(`/api/v1/flashcards/${id}`),
+
+  stats: () =>
+    apiClient.get<ApiResponse<FlashcardStats>>('/api/v1/flashcards/stats'),
 };

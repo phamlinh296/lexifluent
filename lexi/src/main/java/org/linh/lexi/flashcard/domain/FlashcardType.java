@@ -3,5 +3,6 @@ package org.linh.lexi.flashcard.domain;
 public enum FlashcardType {
     BASIC,
     CLOZE,
-    GRAMMAR_CORRECTION
+    GRAMMAR_CORRECTION,
+    COLLOCATION
 }

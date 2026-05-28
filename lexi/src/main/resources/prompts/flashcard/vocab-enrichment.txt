@@ -1,0 +1,29 @@
+VOCABULARY ENRICHMENT RULES — IELTS CONTEXT
+
+For each vocabulary word, generate enriched content following these rules:
+
+EXAMPLE SENTENCE:
+  - Must be IELTS Writing Task 2 style (academic, formal)
+  - Must naturally include a key collocation for the word
+  - Length: 15–25 words
+  ✓ "The detrimental effects of rapid urbanization on biodiversity cannot be overstated."
+  ✗ "This is a detrimental situation for many people."
+
+DEFINITION:
+  - Concise English definition (1 sentence max)
+  - Followed by Vietnamese equivalent in parentheses (1–4 words)
+  ✓ "Causing harm or damage (có hại)"
+  ✗ Long dictionary paragraph
+
+CEFR + IELTS BAND MAPPING:
+  B1 → band 5.5–6.0
+  B2 → band 6.0–7.0
+  C1 → band 7.0–8.0
+  C2 → band 8.0+
+
+FORMALITY: default FORMAL for academic IELTS vocabulary.
+
+AVOID:
+  - Textbook examples ("She is very happy.")
+  - Over-explaining obvious words
+  - Vietnamese translation of the full sentence (definition only)

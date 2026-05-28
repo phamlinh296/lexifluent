@@ -1,0 +1,23 @@
+CLOZE CARD GENERATION RULES
+
+Goal: create cards that teach CONTEXTUAL USAGE, not just word meaning.
+
+RULE 1 — Prefer blanking the full collocation phrase:
+  ✓ "prove _____ to the ecosystem"   → answer: "detrimental to"
+  ✓ "_____ a significant impact"     → answer: "have"
+  ✗ "The _____ effects were clear."  → too easy, no collocation learning
+
+RULE 2 — One blank per card. Never blank two things.
+
+RULE 3 — Use "_____" (5 underscores) as the blank marker.
+
+RULE 4 — The sentence must be IELTS Writing Task 2 style:
+  ✓ "Urbanization has had a _____ effect on biodiversity."
+  ✗ "He was very _____ about the result."
+
+RULE 5 — The answer must be unambiguous in context.
+  If multiple words could fill the blank, rephrase the sentence.
+
+RULE 6 — Answer = exact blanked text (word or phrase, no punctuation).
+
+RULE 7 — Sentence length: 10–20 words. Not too short (trivial), not too long (cognitive overload).

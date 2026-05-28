@@ -1,0 +1,21 @@
+COLLOCATION EXTRACTION RULES
+
+Extract the 3–5 most IELTS-useful collocations for each vocabulary word.
+
+PRIORITY ORDER:
+1. Verb + Noun:        "pose a threat", "draw a conclusion", "play a crucial role"
+2. Adjective + Noun:   "significant impact", "adverse effects", "pressing issue"
+3. Adverb + Adjective: "deeply concerned", "highly relevant", "widely recognized"
+4. Verb + Preposition: "contribute to", "result in", "lead to", "beneficial to"
+
+IELTS TOPIC PRIORITY — prefer collocations used in:
+  environment, technology, education, health, crime, globalization, urbanization
+
+FORMAT — return as array of strings, each 2–4 words:
+  ["detrimental to", "prove detrimental", "detrimental effects", "environmentally detrimental"]
+
+AVOID:
+  - Collocations that are rare, literary, or archaic
+  - Full sentences (phrases only)
+  - Repetitive patterns across different words
+  - Informal collocations (e.g., "dead tired", "cost a fortune")

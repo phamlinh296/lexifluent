@@ -30,7 +30,6 @@ public class VocabularyExtractorService {
     private final FlashcardRepository flashcardRepository;
     private final ObjectMapper objectMapper;
 
-    // Called by Kafka consumer after ai.feedback.generated
     @Transactional
     public void extractFromFeedback(UUID aiFeedbackId, UUID userId) {
         AiFeedbackEntity feedback = aiFeedbackRepository.findById(aiFeedbackId)
@@ -64,30 +63,82 @@ public class VocabularyExtractorService {
                                 .cefrLevel(parseCefr(suggestion.getCefrLevel()))
                                 .build());
                         autoCreateClozeCard(userId, word, suggestion, saved.getId());
+                        autoCreateCollocationCards(userId, word, suggestion, saved.getId());
                     }
             );
         }
         log.debug("Extracted {} vocab items for user {} from feedback {}", suggestions.size(), userId, aiFeedbackId);
     }
 
+    // Improved: prefer blanking the full collocation phrase to teach collocations in context
     private void autoCreateClozeCard(UUID userId, String word,
                                       AiFeedbackSchema.VocabularySuggestion suggestion, UUID vocabItemId) {
         String sentence = suggestion.getExampleSentence();
         if (sentence == null || sentence.isBlank()) return;
-        // Skip if card already exists for this vocab item
-        if (flashcardRepository.existsByUserIdAndVocabularyItemId(userId, vocabItemId)) return;
 
-        String clozeQuestion = sentence.replaceAll("(?i)" + Pattern.quote(word), "_____");
-        if (clozeQuestion.equals(sentence)) return; // word not found in sentence
+        String front = null;
+        String back = null;
+
+        // Try to blank a multi-word collocation first
+        List<String> collocations = suggestion.getCollocations();
+        if (collocations != null) {
+            for (String collocation : collocations) {
+                if (collocation == null || collocation.isBlank()) continue;
+                if (collocation.equalsIgnoreCase(word)) continue;
+                String attempt = sentence.replaceAll("(?i)" + Pattern.quote(collocation), "_____");
+                if (!attempt.equals(sentence)) {
+                    front = attempt;
+                    back = collocation;
+                    break;
+                }
+            }
+        }
+
+        // Fallback: blank just the target word
+        if (front == null) {
+            front = sentence.replaceAll("(?i)" + Pattern.quote(word), "_____");
+            if (front.equals(sentence)) return;
+            back = word;
+        }
+
+        if (flashcardRepository.findByUserIdAndFrontIgnoreCase(userId, front).isPresent()) return;
 
         flashcardRepository.save(Flashcard.builder()
                 .userId(userId)
                 .vocabularyItemId(vocabItemId)
                 .type(FlashcardType.CLOZE)
-                .front(clozeQuestion)
-                .back(word)
+                .front(front)
+                .back(back)
                 .cefrLevel(suggestion.getCefrLevel() != null ? suggestion.getCefrLevel().toUpperCase() : null)
                 .build());
+    }
+
+    // Creates one COLLOCATION card per collocation phrase (word blanked out)
+    private void autoCreateCollocationCards(UUID userId, String word,
+                                             AiFeedbackSchema.VocabularySuggestion suggestion, UUID vocabItemId) {
+        List<String> collocations = suggestion.getCollocations();
+        if (collocations == null || collocations.isEmpty()) return;
+        String cefr = suggestion.getCefrLevel() != null ? suggestion.getCefrLevel().toUpperCase() : null;
+
+        for (String collocation : collocations) {
+            if (collocation == null || collocation.isBlank()) continue;
+            if (collocation.equalsIgnoreCase(word)) continue;
+
+            // Front: collocation with target word blanked → teaches the pattern
+            String front = collocation.replaceAll("(?i)" + Pattern.quote(word), "_____");
+            if (front.equals(collocation)) continue; // word not present in this collocation string
+
+            if (flashcardRepository.findByUserIdAndFrontIgnoreCase(userId, front).isPresent()) continue;
+
+            flashcardRepository.save(Flashcard.builder()
+                    .userId(userId)
+                    .vocabularyItemId(vocabItemId)
+                    .type(FlashcardType.COLLOCATION)
+                    .front(front)
+                    .back(collocation)
+                    .cefrLevel(cefr)
+                    .build());
+        }
     }
 
     private CefrLevel parseCefr(String raw) {

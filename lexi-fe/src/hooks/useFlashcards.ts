@@ -13,6 +13,13 @@ export function useFlashcards(dueOnly = false) {
   });
 }
 
+export function useFlashcardStats() {
+  return useQuery({
+    queryKey: ['flashcard-stats'],
+    queryFn: () => flashcardsApi.stats().then((r) => r.data.data ?? { flashcardStreak: 0 }),
+  });
+}
+
 export function useCreateFlashcard() {
   const qc = useQueryClient();
   return useMutation({
@@ -30,7 +37,10 @@ export function useReviewFlashcard() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: ReviewFlashcardRequest }) =>
       flashcardsApi.review(id, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['flashcards'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['flashcards'] });
+      qc.invalidateQueries({ queryKey: ['flashcard-stats'] });
+    },
   });
 }
 

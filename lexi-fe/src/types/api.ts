@@ -240,7 +240,11 @@ export interface UserProgress {
 
 // ─── Flashcard ────────────────────────────────────────────────────────────────
 
-export type FlashcardType = 'BASIC' | 'CLOZE' | 'GRAMMAR_CORRECTION';
+export type FlashcardType = 'BASIC' | 'CLOZE' | 'GRAMMAR_CORRECTION' | 'COLLOCATION';
+
+export interface FlashcardStats {
+  flashcardStreak: number;
+}
 
 export interface Flashcard {
   id: string;

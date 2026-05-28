@@ -6,6 +6,7 @@ import org.linh.lexi.user.domain.CefrLevel;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -59,6 +60,13 @@ public class UserProgress {
     @Column(name = "longest_streak")
     @Builder.Default
     private int longestStreak = 0;
+
+    @Column(name = "flashcard_streak")
+    @Builder.Default
+    private int flashcardStreak = 0;
+
+    @Column(name = "last_flashcard_date")
+    private LocalDate lastFlashcardDate;
 
     @Column(name = "last_updated_at")
     @Builder.Default

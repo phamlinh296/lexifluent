@@ -5,6 +5,7 @@ import org.linh.lexi.common.response.ApiResponse;
 import org.linh.lexi.common.security.LexiUserPrincipal;
 import org.linh.lexi.flashcard.dto.CreateFlashcardRequest;
 import org.linh.lexi.flashcard.dto.FlashcardDto;
+import org.linh.lexi.flashcard.dto.FlashcardStatsDto;
 import org.linh.lexi.flashcard.dto.ReviewFlashcardRequest;
 import org.linh.lexi.flashcard.service.FlashcardService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -51,5 +52,11 @@ public class FlashcardController {
             @PathVariable UUID id) {
         service.delete(principal.userId(), id);
         return ApiResponse.ok(null);
+    }
+
+    @GetMapping("/stats")
+    public ApiResponse<FlashcardStatsDto> stats(
+            @AuthenticationPrincipal LexiUserPrincipal principal) {
+        return ApiResponse.ok(service.getStats(principal.userId()));
     }
 }
