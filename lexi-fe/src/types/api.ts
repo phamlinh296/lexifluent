@@ -240,7 +240,7 @@ export interface UserProgress {
 
 // ─── Flashcard ────────────────────────────────────────────────────────────────
 
-export type FlashcardType = 'BASIC' | 'CLOZE' | 'GRAMMAR_CORRECTION' | 'COLLOCATION';
+export type FlashcardType = 'BASIC' | 'CLOZE' | 'GRAMMAR_CORRECTION' | 'COLLOCATION' | 'TRANSLATION';
 
 export interface FlashcardStats {
   flashcardStreak: number;
@@ -272,6 +272,38 @@ export interface CreateFlashcardRequest {
 
 export interface ReviewFlashcardRequest {
   quality: number; // 0-5
+}
+
+export interface AnalyzeTranslationRequest {
+  vietnameseSentence: string;
+  userAnswer: string;
+  difficulty?: string;
+  targetStyle?: string;
+}
+
+export interface TranslationMistake {
+  type: string;
+  original: string;
+  correction: string;
+  explanation: string;
+}
+
+export interface TranslationFeedbackSchema {
+  overallScore: number;
+  accuracyScore: number;
+  naturalnessScore: number;
+  grammarScore: number;
+  cefrEstimate: string;
+  isCorrect: boolean;
+  partiallyCorrect: boolean;
+  hasMultipleValidAnswers: boolean;
+  correctedSentence: string;
+  moreNaturalSentence: string;
+  feedbackSummary: string;
+  mistakes: TranslationMistake[];
+  goodPoints: string[];
+  suggestions: string[];
+  keyLearningPoints: string[];
 }
 
 // ─── Recurring Mistakes ───────────────────────────────────────────────────────

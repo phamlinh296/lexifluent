@@ -1,5 +1,13 @@
 import { apiClient } from '@/lib/axios';
-import type { ApiResponse, CreateFlashcardRequest, Flashcard, FlashcardStats, ReviewFlashcardRequest } from '@/types/api';
+import type {
+  AnalyzeTranslationRequest,
+  ApiResponse,
+  CreateFlashcardRequest,
+  Flashcard,
+  FlashcardStats,
+  ReviewFlashcardRequest,
+  TranslationFeedbackSchema,
+} from '@/types/api';
 
 export const flashcardsApi = {
   list: (dueOnly = false) =>
@@ -16,4 +24,10 @@ export const flashcardsApi = {
 
   stats: () =>
     apiClient.get<ApiResponse<FlashcardStats>>('/api/v1/flashcards/stats'),
+
+  analyzeTranslation: (id: string, data: AnalyzeTranslationRequest) =>
+    apiClient.post<ApiResponse<TranslationFeedbackSchema>>(
+      `/api/v1/flashcards/${id}/translate/analyze`,
+      data,
+    ),
 };

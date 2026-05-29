@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { flashcardsApi } from '@/api/flashcards';
 import { usersApi } from '@/api/users';
-import type { CreateFlashcardRequest, ReviewFlashcardRequest, UserSettingsRequest } from '@/types/api';
+import type { AnalyzeTranslationRequest, CreateFlashcardRequest, ReviewFlashcardRequest, UserSettingsRequest } from '@/types/api';
 import { toast } from '@/hooks/useToast';
 
 export function useFlashcards(dueOnly = false) {
@@ -52,6 +52,19 @@ export function useDeleteFlashcard() {
       qc.invalidateQueries({ queryKey: ['flashcards'] });
       toast({ title: 'Đã xóa flashcard' });
     },
+  });
+}
+
+export function useAnalyzeTranslation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: AnalyzeTranslationRequest }) =>
+      flashcardsApi.analyzeTranslation(id, data).then((r) => r.data.data!),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['flashcards'] });
+      qc.invalidateQueries({ queryKey: ['flashcard-stats'] });
+    },
+    onError: () => toast({ title: 'Phân tích thất bại, thử lại', variant: 'destructive' }),
   });
 }
 
