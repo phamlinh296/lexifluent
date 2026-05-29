@@ -1,13 +1,16 @@
 package org.linh.lexi.flashcard.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.linh.lexi.ai.schema.TranslationFeedbackSchema;
 import org.linh.lexi.common.response.ApiResponse;
 import org.linh.lexi.common.security.LexiUserPrincipal;
+import org.linh.lexi.flashcard.dto.AnalyzeTranslationRequest;
 import org.linh.lexi.flashcard.dto.CreateFlashcardRequest;
 import org.linh.lexi.flashcard.dto.FlashcardDto;
 import org.linh.lexi.flashcard.dto.FlashcardStatsDto;
 import org.linh.lexi.flashcard.dto.ReviewFlashcardRequest;
 import org.linh.lexi.flashcard.service.FlashcardService;
+import org.linh.lexi.flashcard.service.TranslationAnalysisService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +23,7 @@ import java.util.UUID;
 public class FlashcardController {
 
     private final FlashcardService service;
+    private final TranslationAnalysisService translationAnalysisService;
 
     @PostMapping
     public ApiResponse<FlashcardDto> create(
@@ -58,5 +62,13 @@ public class FlashcardController {
     public ApiResponse<FlashcardStatsDto> stats(
             @AuthenticationPrincipal LexiUserPrincipal principal) {
         return ApiResponse.ok(service.getStats(principal.userId()));
+    }
+
+    @PostMapping("/{id}/translate/analyze")
+    public ApiResponse<TranslationFeedbackSchema> analyzeTranslation(
+            @AuthenticationPrincipal LexiUserPrincipal principal,
+            @PathVariable UUID id,
+            @RequestBody AnalyzeTranslationRequest request) {
+        return ApiResponse.ok(translationAnalysisService.analyze(principal.userId(), id, request));
     }
 }

@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.linh.lexi.ai.domain.AiFeedbackEntity;
 import org.linh.lexi.ai.repository.AiFeedbackRepository;
 import org.linh.lexi.ai.schema.AiFeedbackSchema;
+import org.linh.lexi.ai.schema.TranslationFeedbackSchema;
 import org.linh.lexi.review.domain.RecurringMistake;
 import org.linh.lexi.review.repository.RecurringMistakeRepository;
 import org.springframework.stereotype.Service;
@@ -49,25 +50,45 @@ public class MistakeTrackerService {
             String example = sample.getOriginal() != null && sample.getCorrected() != null
                     ? sample.getOriginal() + " → " + sample.getCorrected()
                     : null;
-            String desc = sample.getExplanation();
-
-            mistakeRepository.findByUserIdAndMistakeType(userId, type).ifPresentOrElse(
-                    existing -> {
-                        existing.increment(example);
-                        // Accumulate count for all corrections of this type in this feedback
-                        existing.setOccurrenceCount(existing.getOccurrenceCount() + list.size() - 1);
-                        mistakeRepository.save(existing);
-                    },
-                    () -> mistakeRepository.save(RecurringMistake.builder()
-                            .userId(userId)
-                            .mistakeType(type)
-                            .description(desc)
-                            .example(example)
-                            .occurrenceCount(list.size())
-                            .build())
-            );
+            upsertMistake(userId, type, sample.getExplanation(), example, list.size());
         });
 
         log.debug("Tracked {} mistake types for user {} from feedback {}", grouped.size(), userId, aiFeedbackId);
+    }
+
+    @Transactional
+    public void trackFromTranslationMistakes(UUID userId, List<TranslationFeedbackSchema.MistakeItem> mistakes) {
+        if (mistakes == null || mistakes.isEmpty()) return;
+
+        Map<String, List<TranslationFeedbackSchema.MistakeItem>> grouped = mistakes.stream()
+                .filter(m -> m.getType() != null)
+                .collect(Collectors.groupingBy(m -> m.getType().toUpperCase()));
+
+        grouped.forEach((type, list) -> {
+            TranslationFeedbackSchema.MistakeItem sample = list.get(0);
+            String example = sample.getOriginal() != null && sample.getCorrection() != null
+                    ? sample.getOriginal() + " → " + sample.getCorrection()
+                    : null;
+            upsertMistake(userId, type, sample.getExplanation(), example, list.size());
+        });
+
+        log.debug("Tracked {} mistake types for user {} from translation feedback", grouped.size(), userId);
+    }
+
+    private void upsertMistake(UUID userId, String type, String desc, String example, int count) {
+        mistakeRepository.findByUserIdAndMistakeType(userId, type).ifPresentOrElse(
+                existing -> {
+                    existing.increment(example);
+                    existing.setOccurrenceCount(existing.getOccurrenceCount() + count - 1);
+                    mistakeRepository.save(existing);
+                },
+                () -> mistakeRepository.save(RecurringMistake.builder()
+                        .userId(userId)
+                        .mistakeType(type)
+                        .description(desc)
+                        .example(example)
+                        .occurrenceCount(count)
+                        .build())
+        );
     }
 }

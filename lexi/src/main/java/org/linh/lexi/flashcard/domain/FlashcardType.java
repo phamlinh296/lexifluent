@@ -4,5 +4,6 @@ public enum FlashcardType {
     BASIC,
     CLOZE,
     GRAMMAR_CORRECTION,
-    COLLOCATION
+    COLLOCATION,
+    TRANSLATION
 }
