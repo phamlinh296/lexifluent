@@ -61,6 +61,7 @@ public class VocabularyExtractorService {
                                 .definition(suggestion.getDefinition())
                                 .exampleSentence(suggestion.getExampleSentence())
                                 .cefrLevel(parseCefr(suggestion.getCefrLevel()))
+                                .topicTag(normalizeTopic(suggestion.getTopic()))
                                 .build());
                         autoCreateClozeCard(userId, word, suggestion, saved.getId());
                         autoCreateCollocationCards(userId, word, suggestion, saved.getId());
@@ -145,5 +146,10 @@ public class VocabularyExtractorService {
         if (raw == null) return null;
         try { return CefrLevel.valueOf(raw.toUpperCase().trim()); }
         catch (IllegalArgumentException ex) { return null; }
+    }
+
+    private String normalizeTopic(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+        return raw.toLowerCase().trim();
     }
 }

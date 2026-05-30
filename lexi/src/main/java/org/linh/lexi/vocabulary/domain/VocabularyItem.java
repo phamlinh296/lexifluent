@@ -50,6 +50,9 @@ public class VocabularyItem {
     @Builder.Default
     private int encounterCount = 1;
 
+    @Column(name = "topic_tag", length = 50)
+    private String topicTag;
+
     @Column(name = "created_at", updatable = false)
     @Builder.Default
     private Instant createdAt = Instant.now();
