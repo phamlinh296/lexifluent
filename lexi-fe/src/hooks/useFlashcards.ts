@@ -85,6 +85,14 @@ export function useAnalyzeTranslation() {
   });
 }
 
+export function useAnalyzeTranslationStandalone() {
+  return useMutation({
+    mutationFn: (data: AnalyzeTranslationRequest) =>
+      flashcardsApi.analyzeTranslationStandalone(data).then((r) => r.data.data!),
+    onError: () => toast({ title: 'Phân tích thất bại, thử lại', variant: 'destructive' }),
+  });
+}
+
 export function useImportFlashcards() {
   const qc = useQueryClient();
   return useMutation({

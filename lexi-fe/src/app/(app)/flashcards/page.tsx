@@ -1,6 +1,7 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,9 +21,9 @@ import { flashcardsApi } from '@/api/flashcards';
 import type { Flashcard, FlashcardGroup, ImportResult, TranslationFeedbackSchema } from '@/types/api';
 import { cefrColor, cn } from '@/lib/utils';
 import {
-  AlertCircle, CheckCircle2, ChevronDown, Download, FileDown, FileSpreadsheet,
+  AlertCircle, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, Download, FileDown, FileSpreadsheet,
   FileText, Flame, Folder, FolderPlus, Heart, Plus,
-  RotateCcw, Trash2, Upload, X, XCircle,
+  RotateCcw, Shuffle, Trash2, Upload, X, XCircle,
 } from 'lucide-react';
 
 const SESSION_LIMIT = 20;
@@ -173,13 +174,17 @@ function StudyCard({ card, onReview }: { card: Flashcard; onReview: (q: number) 
               {isCloze ? (<><p className="text-xs text-muted-foreground uppercase tracking-wide">Điền vào chỗ trống</p><p className="text-lg leading-relaxed font-medium">{card.front}</p></>)
                 : isCollocation ? (<><p className="text-xs text-muted-foreground uppercase tracking-wide">Hoàn thành collocation</p><p className="text-2xl font-bold tracking-wide">{card.front}</p></>)
                 : <p className="text-2xl font-bold">{card.front}</p>}
-              {card.cefrLevel && <span className={`text-xs px-2 py-0.5 rounded-full font-medium mt-2 inline-block ${cefrColor(card.cefrLevel as never)}`}>{card.cefrLevel}</span>}
+              {card.phonetic && <p className="text-sm text-muted-foreground font-mono">{card.phonetic}</p>}
+              {card.cefrLevel && <span className={`text-xs px-2 py-0.5 rounded-full font-medium inline-block ${cefrColor(card.cefrLevel as never)}`}>{card.cefrLevel}</span>}
               <p className="text-xs text-muted-foreground mt-4">Nhấn để xem đáp án</p>
             </motion.div>
           ) : (
-            <motion.div key="back" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <motion.div key="back" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3 w-full">
               {isCloze || isCollocation ? <p className="text-2xl font-bold text-primary">{card.back}</p>
                 : <p className="text-sm whitespace-pre-wrap text-left">{card.back}</p>}
+              {card.vietnameseMeaning && (
+                <p className="text-sm text-blue-600 dark:text-blue-400 border-t pt-2">{card.vietnameseMeaning}</p>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -198,19 +203,20 @@ function StudyCard({ card, onReview }: { card: Flashcard; onReview: (q: number) 
 // ─── Flashcard list item ──────────────────────────────────────────────────────
 
 function FlashcardListItem({
-  card, groups, onDelete, onToggleFavorite, onAddToGroup,
+  card, groups, onDelete, onToggleFavorite, onAddToGroup, onStudy,
 }: {
   card: Flashcard;
   groups: FlashcardGroup[];
   onDelete: () => void;
   onToggleFavorite: () => void;
   onAddToGroup: (groupId: string) => void;
+  onStudy: () => void;
 }) {
   const [showGroupPicker, setShowGroupPicker] = useState(false);
   const typeLabel = TYPE_LABEL[card.type];
 
   return (
-    <div className="border rounded-lg hover:bg-accent/50 transition-colors">
+    <div className="border rounded-lg hover:bg-accent/50 hover:border-primary/30 transition-colors cursor-pointer" onClick={onStudy}>
       <div className="flex items-center justify-between p-3">
         <div className="flex items-center gap-3 min-w-0">
           <div className="min-w-0">
@@ -231,7 +237,7 @@ function FlashcardListItem({
             )}
           </div>
         </div>
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
           <div className="text-right text-xs text-muted-foreground hidden sm:block mr-1">
             <p>Ôn lần {card.reviewCount}</p>
             {card.isDue && <p className="text-orange-500 font-medium">Đến hạn ôn</p>}
@@ -244,16 +250,16 @@ function FlashcardListItem({
                 <FolderPlus className="h-3.5 w-3.5" />
               </Button>
               {showGroupPicker && (
-                <div className="absolute right-0 top-8 z-10 w-44 bg-popover border rounded-lg shadow-lg py-1">
+                <div className="absolute right-0 top-8 z-10 w-44 bg-white dark:bg-zinc-900 border rounded-lg shadow-xl py-1">
                   {groups.map((g) => {
                     const inGroup = card.groupIds?.includes(g.id);
                     return (
                       <button key={g.id} onClick={() => { onAddToGroup(g.id); setShowGroupPicker(false); }}
-                        className={cn('w-full text-left text-sm px-3 py-1.5 hover:bg-accent flex items-center gap-2',
+                        className={cn('w-full text-left px-3 py-1.5 hover:bg-accent flex items-center gap-2',
                           inGroup && 'text-muted-foreground')}>
                         <Folder className="h-3.5 w-3.5 shrink-0" />
-                        <span className="truncate">{g.name}</span>
-                        {inGroup && <span className="ml-auto text-xs">(đã có)</span>}
+                        <span className="truncate text-xs">{g.name}</span>
+                        {inGroup && <span className="ml-auto text-xs opacity-60">(đã có)</span>}
                       </button>
                     );
                   })}
@@ -278,7 +284,7 @@ function FlashcardListItem({
 
 // ─── Groups panel ─────────────────────────────────────────────────────────────
 
-function GroupsPanel({ allCards }: { allCards: Flashcard[] }) {
+function GroupsPanel({ allCards, onStudyCard }: { allCards: Flashcard[]; onStudyCard: (card: Flashcard, pool: Flashcard[]) => void }) {
   const [selectedGroup, setSelectedGroup] = useState<FlashcardGroup | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [groupName, setGroupName] = useState('');
@@ -332,13 +338,13 @@ function GroupsPanel({ allCards }: { allCards: Flashcard[] }) {
         ) : (
           <div className="space-y-2">
             {groupCards.map((card) => (
-              <div key={card.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50">
+              <div key={card.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 hover:border-primary/30 transition-colors cursor-pointer" onClick={() => onStudyCard(card, groupCards)}>
                 <div className="min-w-0">
                   <p className="font-medium text-sm">{card.front}</p>
                   <p className="text-xs text-muted-foreground truncate max-w-xs">{card.back.split('\n')[0]}</p>
                 </div>
                 <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground shrink-0"
-                  onClick={() => removeCard.mutate({ groupId: selectedGroup.id, cardId: card.id })} title="Xóa khỏi nhóm">
+                  onClick={(e) => { e.stopPropagation(); removeCard.mutate({ groupId: selectedGroup.id, cardId: card.id }); }} title="Xóa khỏi nhóm">
                   <X className="h-3.5 w-3.5" />
                 </Button>
               </div>
@@ -360,13 +366,16 @@ function GroupsPanel({ allCards }: { allCards: Flashcard[] }) {
       </div>
 
       {showCreate && (
-        <div className="mb-4 flex gap-2">
+        <div className="mb-4 space-y-1.5">
+          <p className="text-xs text-muted-foreground">Tên nhóm <span className="text-destructive ml-0.5">*</span></p>
+          <div className="flex gap-2">
           <Input placeholder="Tên nhóm..." value={groupName} onChange={(e) => setGroupName(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleCreate(); }}
             disabled={createGroup.isPending} className="flex-1" autoFocus />
           <Button size="sm" onClick={handleCreate} disabled={!groupName.trim() || createGroup.isPending}>
             {createGroup.isPending ? '...' : 'Tạo'}
           </Button>
+          </div>
         </div>
       )}
 
@@ -539,6 +548,16 @@ export default function FlashcardsPage() {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [viInput, setViInput] = useState('');
 
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (!searchParams.get('study')) {
+      setMode('list'); setStudyIndex(0); setStudyDeck([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   const { data: allCards = [], isLoading } = useFlashcards(false);
   const { data: dueCards = [] } = useFlashcards(true);
   const { data: favoriteCards = [] } = useFavoriteFlashcards();
@@ -554,14 +573,35 @@ export default function FlashcardsPage() {
   const streak = stats?.flashcardStreak ?? 0;
   const currentCard = studyDeck[studyIndex];
 
+  function exitStudy() {
+    setMode('list'); setStudyIndex(0); setStudyDeck([]);
+    router.push('/flashcards', { scroll: false });
+  }
+
   function startStudy() {
     const deck = [...allCards].sort((a, b) => (a.isDue === b.isDue ? 0 : a.isDue ? -1 : 1)).slice(0, SESSION_LIMIT);
     setStudyDeck(deck); setStudyIndex(0); setMode('study');
+    router.push('?study=1', { scroll: false });
+  }
+
+  function startStudyFromCard(card: Flashcard, sourceCards?: Flashcard[]) {
+    const pool = sourceCards ?? allCards;
+    const startIndex = pool.findIndex((c) => c.id === card.id);
+    setStudyDeck(pool);
+    setStudyIndex(startIndex >= 0 ? startIndex : 0);
+    setMode('study');
+    router.push('?study=1', { scroll: false });
+  }
+
+  function shuffleDeck() {
+    const shuffled = [...studyDeck].sort(() => Math.random() - 0.5);
+    setStudyDeck(shuffled);
+    setStudyIndex(0);
   }
 
   function advance() {
     if (studyIndex < studyDeck.length - 1) { setStudyIndex((i) => i + 1); }
-    else { setMode('list'); setStudyIndex(0); setStudyDeck([]); }
+    else { exitStudy(); }
   }
 
   function handleReview(quality: number) {
@@ -575,16 +615,27 @@ export default function FlashcardsPage() {
       { onSuccess: () => { setViInput(''); setShowCreateForm(false); } });
   }
 
-  if (isLoading) return <div className="text-center py-16 text-muted-foreground text-sm">Đang tải...</div>;
+  if (isLoading) return <div className="p-6 text-center py-16 text-muted-foreground text-sm">Đang tải...</div>;
 
   if (mode === 'study' && currentCard) {
     return (
-      <div className="max-w-xl mx-auto space-y-4">
+      <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-4">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold">Ôn flashcard</h1>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">{studyIndex + 1} / {studyDeck.length}</span>
-            <Button variant="outline" size="sm" onClick={() => { setMode('list'); setStudyIndex(0); setStudyDeck([]); }}>Thoát</Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="h-8 w-8 p-0"
+              onClick={() => setStudyIndex((i) => i - 1)} disabled={studyIndex === 0}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm text-muted-foreground w-16 text-center">{studyIndex + 1} / {studyDeck.length}</span>
+            <Button variant="outline" size="sm" className="h-8 w-8 p-0"
+              onClick={() => setStudyIndex((i) => i + 1)} disabled={studyIndex === studyDeck.length - 1}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={shuffleDeck} title="Xáo bài">
+              <Shuffle className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="sm" onClick={exitStudy}>Thoát</Button>
           </div>
         </div>
         {currentCard.type === 'TRANSLATION'
@@ -597,7 +648,7 @@ export default function FlashcardsPage() {
   const sessionSize = Math.min(allCards.length, SESSION_LIMIT);
 
   return (
-    <div className="space-y-5">
+    <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -629,7 +680,7 @@ export default function FlashcardsPage() {
               <Download className="h-4 w-4" />Export<ChevronDown className="h-3 w-3" />
             </Button>
             {showExportMenu && (
-              <div className="absolute right-0 top-9 z-20 w-44 bg-popover border rounded-lg shadow-lg py-1">
+              <div className="absolute right-0 top-9 z-20 w-44 bg-white dark:bg-zinc-900 border rounded-lg shadow-xl py-1">
                 {([
                   { fmt: 'CSV', label: 'CSV (.csv)', Icon: FileDown },
                   { fmt: 'XLSX', label: 'Excel (.xlsx)', Icon: FileSpreadsheet },
@@ -638,8 +689,9 @@ export default function FlashcardsPage() {
                   <button key={fmt}
                     onClick={() => { exportFlashcards.mutate({ format: fmt }); setShowExportMenu(false); }}
                     disabled={exportFlashcards.isPending}
-                    className="w-full text-left text-sm px-3 py-2 hover:bg-accent flex items-center gap-2.5 disabled:opacity-50">
-                    <Icon className="h-3.5 w-3.5 text-muted-foreground" />{label}
+                    className="w-full text-left px-3 py-2 hover:bg-accent flex items-center gap-2.5 disabled:opacity-50">
+                    <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-xs">{label}</span>
                   </button>
                 ))}
               </div>
@@ -705,7 +757,8 @@ export default function FlashcardsPage() {
                 <FlashcardListItem key={card.id} card={card} groups={groups}
                   onDelete={() => deleteMutation.mutate(card.id)}
                   onToggleFavorite={() => toggleFavorite.mutate(card.id)}
-                  onAddToGroup={(groupId) => addCardToGroup.mutate({ groupId, cardId: card.id })} />
+                  onAddToGroup={(groupId) => addCardToGroup.mutate({ groupId, cardId: card.id })}
+                  onStudy={() => startStudyFromCard(card)} />
               ))}
             </div>
           )}
@@ -713,7 +766,7 @@ export default function FlashcardsPage() {
       )}
 
       {/* ── Groups tab ── */}
-      {listTab === 'groups' && <GroupsPanel allCards={allCards} />}
+      {listTab === 'groups' && <GroupsPanel allCards={allCards} onStudyCard={(card, pool) => startStudyFromCard(card, pool)} />}
 
       {/* ── Favorites tab ── */}
       {listTab === 'favorites' && (
@@ -730,7 +783,8 @@ export default function FlashcardsPage() {
                 <FlashcardListItem key={card.id} card={card} groups={groups}
                   onDelete={() => deleteMutation.mutate(card.id)}
                   onToggleFavorite={() => toggleFavorite.mutate(card.id)}
-                  onAddToGroup={(groupId) => addCardToGroup.mutate({ groupId, cardId: card.id })} />
+                  onAddToGroup={(groupId) => addCardToGroup.mutate({ groupId, cardId: card.id })}
+                  onStudy={() => startStudyFromCard(card)} />
               ))}
             </div>
           )}

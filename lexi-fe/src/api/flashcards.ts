@@ -35,6 +35,9 @@ export const flashcardsApi = {
       data,
     ),
 
+  analyzeTranslationStandalone: (data: AnalyzeTranslationRequest) =>
+    apiClient.post<ApiResponse<TranslationFeedbackSchema>>('/api/v1/translate/analyze', data),
+
   import: (file: File) => {
     const form = new FormData();
     form.append('file', file);
