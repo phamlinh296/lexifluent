@@ -92,6 +92,23 @@ public class FlashcardService {
         repository.delete(card);
     }
 
+    @Transactional
+    public FlashcardDto toggleFavorite(UUID userId, UUID flashcardId) {
+        Flashcard card = repository.findById(flashcardId)
+                .orElseThrow(() -> new LexiException(ErrorCode.FLASHCARD_NOT_FOUND));
+        if (!card.getUserId().equals(userId)) {
+            throw new LexiException(ErrorCode.ACCESS_DENIED);
+        }
+        card.setFavorite(!card.isFavorite());
+        return FlashcardDto.from(repository.save(card));
+    }
+
+    @Transactional(readOnly = true)
+    public List<FlashcardDto> listFavorites(UUID userId) {
+        return repository.findByUserIdAndIsFavoriteTrueOrderByCreatedAtDesc(userId)
+                .stream().map(FlashcardDto::from).toList();
+    }
+
     @Transactional(readOnly = true)
     public FlashcardStatsDto getStats(UUID userId) {
         int streak = progressRepository.findByUserId(userId)

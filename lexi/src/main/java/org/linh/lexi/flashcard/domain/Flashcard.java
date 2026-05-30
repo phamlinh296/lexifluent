@@ -2,13 +2,17 @@ package org.linh.lexi.flashcard.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLRestriction;
 import org.linh.lexi.common.audit.BaseEntity;
 
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
 @Table(name = "flashcards")
+@SQLRestriction("deleted_at IS NULL")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -24,7 +28,6 @@ public class Flashcard extends BaseEntity {
     @Builder.Default
     private FlashcardType type = FlashcardType.BASIC;
 
-    // Optional: linked to a VocabularyItem if created from AI feedback
     @Column(name = "vocabulary_item_id")
     private UUID vocabularyItemId;
 
@@ -34,8 +37,28 @@ public class Flashcard extends BaseEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String back;
 
+    @Column(columnDefinition = "TEXT")
+    private String hint;
+
     @Column(name = "cefr_level", length = 2)
     private String cefrLevel;
+
+    @Column(name = "source", length = 50, nullable = false)
+    @Builder.Default
+    private String source = "AUTO";
+
+    @Column(name = "is_favorite", nullable = false)
+    @Builder.Default
+    private boolean isFavorite = false;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "flashcard_group_items",
+            joinColumns = @JoinColumn(name = "flashcard_id"),
+            inverseJoinColumns = @JoinColumn(name = "group_id")
+    )
+    @Builder.Default
+    private Set<FlashcardGroup> groups = new HashSet<>();
 
     // SM-2 SRS fields
     @Column(name = "ease_factor")

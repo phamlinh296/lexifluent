@@ -32,14 +32,29 @@ public class FlashcardController {
         return ApiResponse.ok(service.create(principal.userId(), request));
     }
 
+    // dueOnly=true → due cards; favoritesOnly=true → favorites; default → all
     @GetMapping
     public ApiResponse<List<FlashcardDto>> list(
             @AuthenticationPrincipal LexiUserPrincipal principal,
-            @RequestParam(defaultValue = "false") boolean dueOnly) {
-        List<FlashcardDto> cards = dueOnly
-                ? service.listDue(principal.userId())
-                : service.listAll(principal.userId());
+            @RequestParam(defaultValue = "false") boolean dueOnly,
+            @RequestParam(defaultValue = "false") boolean favoritesOnly) {
+        UUID userId = principal.userId();
+        List<FlashcardDto> cards;
+        if (dueOnly) {
+            cards = service.listDue(userId);
+        } else if (favoritesOnly) {
+            cards = service.listFavorites(userId);
+        } else {
+            cards = service.listAll(userId);
+        }
         return ApiResponse.ok(cards);
+    }
+
+    @PatchMapping("/{id}/favorite")
+    public ApiResponse<FlashcardDto> toggleFavorite(
+            @AuthenticationPrincipal LexiUserPrincipal principal,
+            @PathVariable UUID id) {
+        return ApiResponse.ok(service.toggleFavorite(principal.userId(), id));
     }
 
     @PostMapping("/{id}/review")
