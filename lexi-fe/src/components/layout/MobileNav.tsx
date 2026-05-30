@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, BookOpen, Home, PenSquare, LayersIcon } from 'lucide-react';
+import { BarChart3, BookOpen, Home, Languages, PenSquare, LayersIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -10,6 +10,7 @@ const navItems = [
   { href: '/writing/new', label: 'Viết', icon: PenSquare },
   { href: '/vocabulary', label: 'Từ vựng', icon: BookOpen },
   { href: '/flashcards', label: 'Flashcard', icon: LayersIcon },
+  { href: '/translate', label: 'Dịch câu', icon: Languages },
   { href: '/progress', label: 'Tiến trình', icon: BarChart3 },
 ];
 
@@ -18,7 +19,7 @@ export function MobileNav() {
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-card">
-      <div className="grid grid-cols-5">
+      <div className="grid grid-cols-6">
         {navItems.map(({ href, label, icon: Icon }) => {
           const active =
             pathname === href ||

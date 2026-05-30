@@ -47,19 +47,19 @@ export function RegisterForm() {
     <div className="space-y-6">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="displayName">Tên hiển thị</Label>
+          <Label htmlFor="displayName">Tên hiển thị <span className="text-destructive ml-0.5">*</span></Label>
           <Input id="displayName" placeholder="Nguyễn Văn A" {...register('displayName')} />
           {errors.displayName && <p className="text-xs text-destructive">{errors.displayName.message}</p>}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">Email <span className="text-destructive ml-0.5">*</span></Label>
           <Input id="email" type="email" placeholder="you@example.com" {...register('email')} />
           {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password">Mật khẩu</Label>
+          <Label htmlFor="password">Mật khẩu <span className="text-destructive ml-0.5">*</span></Label>
           <Input id="password" type="password" placeholder="Tối thiểu 8 ký tự" {...register('password')} />
           {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
         </div>
