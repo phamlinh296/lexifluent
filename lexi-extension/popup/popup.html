@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>LexiFluent</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <span class="logo">LexiFluent</span>
+    </div>
+
+    <div id="view-loading" class="view">
+      <p class="muted">Đang tải...</p>
+    </div>
+
+    <div id="view-logged-in" class="view hidden">
+      <p class="status-ok">Đã đăng nhập ✓</p>
+      <p class="hint">Bôi đen từ bất kỳ trang nào để tạo flashcard nhanh.</p>
+      <button id="btn-logout" class="btn btn-ghost">Đăng xuất</button>
+
+      <div class="divider"></div>
+
+      <label class="label">API URL</label>
+      <div class="row">
+        <input id="api-url" class="input" type="url" placeholder="http://localhost:8080">
+        <button id="btn-save-url" class="btn btn-sm">Lưu</button>
+      </div>
+      <p id="url-saved" class="saved hidden">Đã lưu!</p>
+    </div>
+
+    <div id="view-logged-out" class="view hidden">
+      <p class="hint">Đăng nhập để dùng tính năng bôi đen → flashcard.</p>
+
+      <label class="label">API URL</label>
+      <div class="row">
+        <input id="api-url-lo" class="input" type="url" placeholder="http://localhost:8080">
+        <button id="btn-save-url-lo" class="btn btn-sm">Lưu</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <label class="label">Email</label>
+      <input id="email" class="input" type="email" placeholder="your@email.com" autocomplete="username">
+
+      <label class="label" style="margin-top:6px">Mật khẩu</label>
+      <input id="password" class="input" type="password" placeholder="••••••••" autocomplete="current-password">
+
+      <p id="login-error" class="error hidden"></p>
+
+      <button id="btn-login" class="btn btn-primary">Đăng nhập</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
