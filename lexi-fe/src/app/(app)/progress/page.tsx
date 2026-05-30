@@ -13,6 +13,18 @@ const MISTAKE_LABELS: Record<string, string> = {
   PUNCTUATION: 'Dấu câu',
   WORD_CHOICE: 'Chọn từ',
   STRUCTURE: 'Cấu trúc câu',
+  MISSING_WORD: 'Thiếu từ',
+  EXTRA_WORD: 'Thừa từ',
+  REDUNDANCY: 'Thừa từ',
+  NATURALNESS: 'Tính tự nhiên',
+  COLLOCATION: 'Collocation',
+  CAPITALIZATION: 'Viết hoa',
+  TENSE: 'Thì động từ',
+  ARTICLE: 'Mạo từ',
+  PREPOSITION: 'Giới từ',
+  VERB_FORM: 'Dạng động từ',
+  SUBJECT_VERB_AGREEMENT: 'Chủ-vị',
+  WORD_ORDER: 'Trật tự từ',
 };
 
 const MISTAKE_COLORS: Record<string, string> = {
@@ -21,7 +33,23 @@ const MISTAKE_COLORS: Record<string, string> = {
   PUNCTUATION: 'bg-yellow-100 text-yellow-700',
   WORD_CHOICE: 'bg-purple-100 text-purple-700',
   STRUCTURE: 'bg-blue-100 text-blue-700',
+  MISSING_WORD: 'bg-pink-100 text-pink-700',
+  EXTRA_WORD: 'bg-pink-100 text-pink-700',
+  REDUNDANCY: 'bg-pink-100 text-pink-700',
+  NATURALNESS: 'bg-teal-100 text-teal-700',
+  COLLOCATION: 'bg-indigo-100 text-indigo-700',
+  CAPITALIZATION: 'bg-gray-100 text-gray-700',
+  TENSE: 'bg-red-100 text-red-700',
+  ARTICLE: 'bg-amber-100 text-amber-700',
+  PREPOSITION: 'bg-amber-100 text-amber-700',
+  VERB_FORM: 'bg-red-100 text-red-700',
+  SUBJECT_VERB_AGREEMENT: 'bg-red-100 text-red-700',
+  WORD_ORDER: 'bg-blue-100 text-blue-700',
 };
+
+function formatMistakeType(type: string): string {
+  return MISTAKE_LABELS[type] ?? type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 export default function ProgressPage() {
   const { data: progress, isLoading } = useQuery({
@@ -31,7 +59,7 @@ export default function ProgressPage() {
 
   const { data: calendarData = [] } = useQuery({
     queryKey: ['calendar'],
-    queryFn: () => analyticsApi.getCalendar(90).then((r) => r.data.data ?? []),
+    queryFn: () => analyticsApi.getCalendar(365).then((r) => r.data.data ?? []),
   });
 
   const { data: mistakes = [] } = useQuery({
@@ -76,9 +104,9 @@ export default function ProgressPage() {
 
       {/* Activity calendar */}
       <Card>
-        <CardHeader><CardTitle>Lịch hoạt động (90 ngày)</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Lịch hoạt động</CardTitle></CardHeader>
         <CardContent>
-          <ActivityCalendar data={calendarData} days={90} />
+          <ActivityCalendar data={calendarData} />
         </CardContent>
       </Card>
 
@@ -126,7 +154,7 @@ export default function ProgressPage() {
               {mistakes.map((m) => (
                 <div key={m.mistakeType} className="flex items-start gap-3">
                   <span className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full ${MISTAKE_COLORS[m.mistakeType] ?? 'bg-muted text-muted-foreground'}`}>
-                    {MISTAKE_LABELS[m.mistakeType] ?? m.mistakeType}
+                    {formatMistakeType(m.mistakeType)}
                   </span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
