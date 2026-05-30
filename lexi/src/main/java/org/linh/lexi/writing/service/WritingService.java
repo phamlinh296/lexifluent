@@ -11,6 +11,7 @@ import org.linh.lexi.writing.domain.CorrectionStyle;
 import org.linh.lexi.writing.domain.WritingEntry;
 import org.linh.lexi.writing.domain.WritingMode;
 import org.linh.lexi.writing.domain.WritingStatus;
+import org.linh.lexi.writing.dto.SaveDraftRequest;
 import org.linh.lexi.writing.dto.SubmitWritingRequest;
 import org.linh.lexi.writing.dto.WritingEntryDto;
 import org.linh.lexi.writing.event.WritingSubmittedApplicationEvent;
@@ -68,6 +69,63 @@ public class WritingService {
                 ? writingEntryRepository.findByUserIdAndModeAndDeletedAtIsNullOrderByCreatedAtDesc(userId, mode, pageable)
                 : writingEntryRepository.findByUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(userId, pageable);
         return PageResponse.of(page.map(writingMapper::toDto));
+    }
+
+    @Transactional
+    public WritingEntryDto saveDraft(UUID userId, SaveDraftRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new LexiException(ErrorCode.USER_NOT_FOUND));
+
+        WritingEntry entry = WritingEntry.builder()
+                .user(user)
+                .mode(request.mode())
+                .correctionStyle(deriveStyle(new SubmitWritingRequest(
+                        request.mode(), request.correctionStyle(),
+                        request.text() != null ? request.text() : "",
+                        request.title(), request.topicPrompt(),
+                        request.essayType(), request.task1Type(), request.targetBand())))
+                .essayType(request.essayType())
+                .task1Type(request.task1Type())
+                .targetBand(request.targetBand())
+                .title(request.title())
+                .originalText(request.text() != null ? request.text() : "")
+                .topicPrompt(request.topicPrompt())
+                .build();
+        // status stays DRAFT, no event published
+        return writingMapper.toDto(writingEntryRepository.save(entry));
+    }
+
+    @Transactional
+    public WritingEntryDto updateDraft(UUID userId, UUID entryId, SaveDraftRequest request) {
+        WritingEntry entry = writingEntryRepository.findByIdAndUserIdAndDeletedAtIsNull(entryId, userId)
+                .orElseThrow(() -> new LexiException(ErrorCode.WRITING_NOT_FOUND));
+        if (entry.getStatus() != WritingStatus.DRAFT) {
+            throw new LexiException(ErrorCode.VALIDATION_FAILED, "Only DRAFT entries can be updated");
+        }
+        entry.setTitle(request.title());
+        entry.setTopicPrompt(request.topicPrompt());
+        if (request.text() != null) entry.setOriginalText(request.text());
+        return writingMapper.toDto(writingEntryRepository.save(entry));
+    }
+
+    @Transactional
+    public WritingEntryDto submitDraft(UUID userId, UUID entryId) {
+        WritingEntry entry = writingEntryRepository.findByIdAndUserIdAndDeletedAtIsNull(entryId, userId)
+                .orElseThrow(() -> new LexiException(ErrorCode.WRITING_NOT_FOUND));
+        if (entry.getStatus() != WritingStatus.DRAFT) {
+            throw new LexiException(ErrorCode.VALIDATION_FAILED, "Only DRAFT entries can be submitted");
+        }
+        if (entry.getOriginalText() == null || entry.getOriginalText().trim().split("\\s+").length < 20) {
+            throw new LexiException(ErrorCode.VALIDATION_FAILED, "Bài viết cần ít nhất 20 từ để nộp");
+        }
+        entry.submit();
+        writingEntryRepository.save(entry);
+
+        var message = new WritingSubmittedMessage(
+                entry.getId(), userId, entry.getMode().name(), entry.getCorrectionStyle().name());
+        eventPublisher.publishEvent(new WritingSubmittedApplicationEvent(this, message));
+
+        return writingMapper.toDto(entry);
     }
 
     @Transactional(readOnly = true)

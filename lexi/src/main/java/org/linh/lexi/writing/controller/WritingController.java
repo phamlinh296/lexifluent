@@ -6,6 +6,7 @@ import org.linh.lexi.common.response.ApiResponse;
 import org.linh.lexi.common.response.PageResponse;
 import org.linh.lexi.common.security.LexiUserPrincipal;
 import org.linh.lexi.writing.domain.WritingMode;
+import org.linh.lexi.writing.dto.SaveDraftRequest;
 import org.linh.lexi.writing.dto.SubmitWritingRequest;
 import org.linh.lexi.writing.dto.WritingEntryDto;
 import org.linh.lexi.writing.service.WritingService;
@@ -29,6 +30,29 @@ public class WritingController {
             @AuthenticationPrincipal LexiUserPrincipal principal,
             @Valid @RequestBody SubmitWritingRequest request) {
         return ApiResponse.ok(writingService.submit(principal.userId(), request));
+    }
+
+    @PostMapping("/draft")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<WritingEntryDto> saveDraft(
+            @AuthenticationPrincipal LexiUserPrincipal principal,
+            @Valid @RequestBody SaveDraftRequest request) {
+        return ApiResponse.ok(writingService.saveDraft(principal.userId(), request));
+    }
+
+    @PutMapping("/{id}/draft")
+    public ApiResponse<WritingEntryDto> updateDraft(
+            @AuthenticationPrincipal LexiUserPrincipal principal,
+            @PathVariable UUID id,
+            @Valid @RequestBody SaveDraftRequest request) {
+        return ApiResponse.ok(writingService.updateDraft(principal.userId(), id, request));
+    }
+
+    @PostMapping("/{id}/submit")
+    public ApiResponse<WritingEntryDto> submitDraft(
+            @AuthenticationPrincipal LexiUserPrincipal principal,
+            @PathVariable UUID id) {
+        return ApiResponse.ok(writingService.submitDraft(principal.userId(), id));
     }
 
     @GetMapping
