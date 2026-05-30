@@ -4,6 +4,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.linh.lexi.auth.dto.AuthResponse;
+import org.linh.lexi.auth.service.OAuthCodeService;
 import org.linh.lexi.auth.service.RefreshTokenService;
 import org.linh.lexi.common.security.JwtService;
 import org.linh.lexi.user.domain.AuthProvider;
@@ -26,6 +28,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
+    private final OAuthCodeService oAuthCodeService;
 
     @Value("${lexi.oauth2.redirect-uri:http://localhost:3000/oauth/callback}")
     private String redirectUri;
@@ -77,12 +80,15 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
         log.info("OAuth2 login success: userId={} provider=GOOGLE", user.getId());
 
-        // Redirect về frontend với tokens
-        // TODO: production → dùng HttpOnly cookie cho refresh token
+        // Tokens không đi qua URL — tạo short-lived code (30s, one-time use)
+        // Frontend sẽ POST /api/v1/auth/oauth2/exchange để lấy tokens thực sự
+        AuthResponse auth = new AuthResponse(
+                user.getId(), user.getEmail(), user.getDisplayName(),
+                accessToken, refreshToken, accessExpiry);
+        String code = oAuthCodeService.createCode(auth);
+
         String targetUrl = UriComponentsBuilder.fromUriString(redirectUri)
-                .queryParam("access_token", accessToken)
-                .queryParam("refresh_token", refreshToken)
-                .queryParam("expires_in", accessExpiry)
+                .queryParam("code", code)
                 .build().toUriString();
 
         getRedirectStrategy().sendRedirect(request, response, targetUrl);

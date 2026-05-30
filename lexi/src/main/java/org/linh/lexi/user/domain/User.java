@@ -1,6 +1,7 @@
 package org.linh.lexi.user.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
@@ -20,7 +21,7 @@ public class User extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
-    // null nếu đăng ký qua Google
+    @JsonIgnore
     @Column(name = "password_hash")
     private String passwordHash;
 
@@ -41,6 +42,7 @@ public class User extends BaseEntity {
     @Builder.Default
     private AuthProvider provider = AuthProvider.LOCAL;
 
+    @JsonIgnore
     @Column(name = "google_id")
     private String googleId;
 
@@ -62,7 +64,7 @@ public class User extends BaseEntity {
     @Builder.Default
     private boolean active = true;
 
-    // Tăng tokenVersion khi đổi password hoặc logout all → invalidate tất cả JWT cũ
+    @JsonIgnore
     @Column(name = "token_version")
     @Builder.Default
     private int tokenVersion = 0;

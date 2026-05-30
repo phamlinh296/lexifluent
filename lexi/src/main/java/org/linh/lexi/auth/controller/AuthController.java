@@ -7,6 +7,7 @@ import org.linh.lexi.auth.dto.AuthResponse;
 import org.linh.lexi.auth.dto.LoginRequest;
 import org.linh.lexi.auth.dto.RegisterRequest;
 import org.linh.lexi.auth.service.AuthService;
+import org.linh.lexi.auth.service.OAuthCodeService;
 import org.linh.lexi.common.response.ApiResponse;
 import org.linh.lexi.common.security.LexiUserPrincipal;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final OAuthCodeService oAuthCodeService;
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
@@ -39,9 +41,20 @@ public class AuthController {
         return ApiResponse.ok(authService.refresh(token, httpRequest.getHeader("User-Agent")));
     }
 
+    @PostMapping("/oauth2/exchange")
+    public ApiResponse<AuthResponse> exchangeOAuthCode(@RequestParam String code) {
+        return ApiResponse.ok(oAuthCodeService.exchangeCode(code));
+    }
+
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void logout(@AuthenticationPrincipal LexiUserPrincipal principal) {
         authService.logout(principal.userId());
+    }
+
+    @PostMapping("/logout-all")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void logoutAll(@AuthenticationPrincipal LexiUserPrincipal principal) {
+        authService.logoutAll(principal.userId());
     }
 }

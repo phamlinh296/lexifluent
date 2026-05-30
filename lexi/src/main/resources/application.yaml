@@ -70,9 +70,14 @@ lexi:
     access-expiry: 900       # 15 minutes
     refresh-expiry: 604800   # 7 days
 
+  encryption:
+    # Independent key for AES-256-GCM (BYOK storage). Must differ from jwt.secret in production.
+    # Rotate this key requires re-encrypting all stored API keys in the database.
+    key: ${ENCRYPTION_KEY:lexifluent-dev-enc-key-change-in-production-32c}
+
   ai:
     gemini:
-      api-key: ${GEMINI_API_KEY:}
+      api-key: ${GEMINI_API_KEY:AIzaSyBLsm6I954466VS_sf-HrqqqKyTeRjdAE4}
     openai:
       api-key: ${OPENAI_API_KEY:}
       base-url: ${OPENAI_BASE_URL:https://api.openai.com}

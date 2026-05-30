@@ -50,10 +50,10 @@ public class RefreshTokenService {
                 .orElseThrow(() -> new LexiException(ErrorCode.REFRESH_TOKEN_INVALID));
 
         if (stored.isRevoked()) {
-            // Token đã dùng rồi mà dùng lại → có thể bị đánh cắp
-            // Revoke tất cả token của user này để an toàn
+            // Could be token reuse (theft) or a multi-tab race condition.
+            // Log for monitoring but don't revoke all sessions — a cascade logout
+            // on every multi-tab race would be too disruptive for an MVP.
             log.warn("Refresh token reuse detected for userId={}", stored.getUserId());
-            refreshTokenRepository.revokeAllByUserId(stored.getUserId());
             throw new LexiException(ErrorCode.REFRESH_TOKEN_INVALID);
         }
 

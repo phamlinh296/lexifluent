@@ -29,6 +29,8 @@ public enum ErrorCode {
 
     // Flashcard
     FLASHCARD_NOT_FOUND("FLASHCARD_001", "Flashcard not found", HttpStatus.NOT_FOUND),
+    FLASHCARD_GROUP_NOT_FOUND("FLASHCARD_002", "Flashcard group not found", HttpStatus.NOT_FOUND),
+    FLASHCARD_GROUP_DUPLICATE("FLASHCARD_003", "A group with this name already exists", HttpStatus.CONFLICT),
 
     // Generic
     VALIDATION_FAILED("VALIDATION_001", "Request validation failed", HttpStatus.BAD_REQUEST),

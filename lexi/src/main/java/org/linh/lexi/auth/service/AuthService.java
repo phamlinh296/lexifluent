@@ -73,6 +73,15 @@ public class AuthService {
         refreshTokenService.revokeAll(userId);
     }
 
+    @Transactional
+    public void logoutAll(UUID userId) {
+        refreshTokenService.revokeAll(userId);
+        userRepository.findById(userId).ifPresent(user -> {
+            user.incrementTokenVersion();
+            userRepository.save(user);
+        });
+    }
+
     private AuthResponse buildAuthResponse(User user, String deviceInfo) {
         String accessToken = jwtService.generateAccessToken(
                 user.getId(), user.getEmail(), user.getRole().name(),
