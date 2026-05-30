@@ -44,6 +44,8 @@ public class AiFeedbackSchema {
         private String cefrLevel;
         private String definition;
         private String exampleSentence;
+        // Topic classification stored once in DB — no re-analysis needed
+        private String topic; // education|technology|business|health|environment|travel|linking_word|academic|daily_life|social|science|law
     }
 
     @Data

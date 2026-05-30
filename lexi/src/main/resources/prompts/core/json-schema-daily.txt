@@ -20,7 +20,8 @@ Return valid JSON matching this exact schema:
       "collocations": ["natural collocation 1"],
       "cefrLevel": "B2",
       "definition": "brief definition",
-      "exampleSentence": "example sentence"
+      "exampleSentence": "example sentence",
+      "topic": "education"
     }
   ],
   "rewrittenSentences": [
@@ -48,6 +49,7 @@ Constraints:
 - severity: LOW | MEDIUM | HIGH
 - cefrLevel: A1 | A2 | B1 | B2 | C1 | C2
 - style: NATURAL | NATIVE | FORMAL | CONCISE
+- topic: education | technology | business | health | environment | travel | linking_word | academic | daily_life | social | science | law (pick the closest; null if none fit)
 - startOffset: character position in the ORIGINAL text, integer >= 0
 - endOffset: character position in the ORIGINAL text, integer > startOffset
 - grammarAccuracy, fluencyScore, lexicalDiversity, naturalnessScore: 0.0 to 1.0

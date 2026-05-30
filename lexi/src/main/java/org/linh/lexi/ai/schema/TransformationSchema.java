@@ -41,6 +41,8 @@ public class TransformationSchema {
         private String cefrLevel;  // A1 | A2 | B1 | B2 | C1 | C2
         private String definition;
         private String exampleSentence;
+        // Topic classification stored once in DB — no re-analysis needed
+        private String topic; // education|technology|business|health|environment|travel|linking_word|academic|daily_life|social|science|law
     }
 
     @Data
