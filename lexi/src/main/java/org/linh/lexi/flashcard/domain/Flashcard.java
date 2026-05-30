@@ -40,6 +40,12 @@ public class Flashcard extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String hint;
 
+    @Column(name = "phonetic", columnDefinition = "VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
+    private String phonetic;
+
+    @Column(name = "vietnamese_meaning", columnDefinition = "TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
+    private String vietnameseMeaning;
+
     @Column(name = "cefr_level", length = 2)
     private String cefrLevel;
 

@@ -92,6 +92,8 @@ public class VocabularyEnrichmentService {
         VocabularyItem item = VocabularyItem.builder()
                 .userId(userId)
                 .word(word)
+                .phonetic(schema.getPhonetic())
+                .vietnameseMeaning(schema.getVietnameseMeaning())
                 .definition(schema.getDefinition())
                 .exampleSentence(schema.getExampleSentence())
                 .cefrLevel(parseCefr(schema.getCefrLevel()))

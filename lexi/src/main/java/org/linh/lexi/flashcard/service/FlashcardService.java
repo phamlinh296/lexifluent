@@ -49,6 +49,8 @@ public class FlashcardService {
                 .type(cardType)
                 .front(request.front())
                 .back(request.back())
+                .phonetic(request.phonetic())
+                .vietnameseMeaning(request.vietnameseMeaning())
                 .cefrLevel(request.cefrLevel())
                 .build();
         return FlashcardDto.from(repository.save(card));

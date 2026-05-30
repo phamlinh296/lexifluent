@@ -58,6 +58,8 @@ public class VocabularyExtractorService {
                                 .userId(userId)
                                 .writingEntryId(feedback.getWritingEntryId())
                                 .word(word)
+                                .phonetic(suggestion.getPhonetic())
+                                .vietnameseMeaning(suggestion.getVietnameseMeaning())
                                 .definition(suggestion.getDefinition())
                                 .exampleSentence(suggestion.getExampleSentence())
                                 .cefrLevel(parseCefr(suggestion.getCefrLevel()))
@@ -110,6 +112,8 @@ public class VocabularyExtractorService {
                 .type(FlashcardType.CLOZE)
                 .front(front)
                 .back(back)
+                .phonetic(suggestion.getPhonetic())
+                .vietnameseMeaning(suggestion.getVietnameseMeaning())
                 .cefrLevel(suggestion.getCefrLevel() != null ? suggestion.getCefrLevel().toUpperCase() : null)
                 .build());
     }
@@ -137,6 +141,8 @@ public class VocabularyExtractorService {
                     .type(FlashcardType.COLLOCATION)
                     .front(front)
                     .back(collocation)
+                    .phonetic(suggestion.getPhonetic())
+                    .vietnameseMeaning(suggestion.getVietnameseMeaning())
                     .cefrLevel(cefr)
                     .build());
         }

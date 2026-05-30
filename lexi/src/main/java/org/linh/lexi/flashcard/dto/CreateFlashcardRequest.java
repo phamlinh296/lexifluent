@@ -5,6 +5,8 @@ import java.util.UUID;
 public record CreateFlashcardRequest(
         String front,            // word or phrase (required)
         String back,             // definition + example (required)
+        String phonetic,         // optional — IPA transcription
+        String vietnameseMeaning, // optional — Vietnamese translation
         String cefrLevel,        // optional
         UUID vocabularyItemId,   // optional — link to source vocab
         String type              // optional — BASIC | CLOZE | GRAMMAR_CORRECTION, defaults to BASIC

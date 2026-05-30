@@ -53,6 +53,12 @@ public class VocabularyItem {
     @Column(name = "topic_tag", length = 50)
     private String topicTag;
 
+    @Column(name = "phonetic", columnDefinition = "VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
+    private String phonetic;
+
+    @Column(name = "vietnamese_meaning", columnDefinition = "TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
+    private String vietnameseMeaning;
+
     @Column(name = "created_at", updatable = false)
     @Builder.Default
     private Instant createdAt = Instant.now();
