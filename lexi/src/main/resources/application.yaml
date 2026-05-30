@@ -77,7 +77,7 @@ lexi:
 
   ai:
     gemini:
-      api-key: ${GEMINI_API_KEY:AIzaSyBLsm6I954466VS_sf-HrqqqKyTeRjdAE4}
+      api-key: ${GEMINI_API_KEY:}
     openai:
       api-key: ${OPENAI_API_KEY:}
       base-url: ${OPENAI_BASE_URL:https://api.openai.com}
