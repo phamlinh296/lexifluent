@@ -186,3 +186,6 @@ lexi.rate-limit.requests-per-minute
 - **Mistake tracking**: upserts on UNIQUE(user_id, mistake_type); `increment()` updates count + example
 - **Streak logic**: yesterday → +1, today already counted → no change, gap > 1 day → reset to 1 (UTC)
 - **Schema retry**: on `AI_RESPONSE_INVALID`, rebuild user prompt with error details → single retry (no loop)
+
+## Bug Documentation Rule
+Sau mỗi lần fix lỗi liên quan đến **backend** hoặc **tương tác BE↔FE**, append một entry vào `docs/fix.md` gồm: triệu chứng, root cause, fix, và bài học thiết kế.
