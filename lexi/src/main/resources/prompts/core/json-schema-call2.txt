@@ -16,10 +16,12 @@ Return valid JSON matching this exact schema:
   "vocabularySuggestions": [
     {
       "word": "word from text",
+      "phonetic": "/wɜːrd/",
+      "vietnameseMeaning": "từ/cụm từ tiếng Việt ngắn gọn",
       "alternatives": ["better alternative 1", "alternative 2"],
       "collocations": ["natural collocation 1"],
       "cefrLevel": "B2",
-      "definition": "brief definition",
+      "definition": "brief English-only definition",
       "exampleSentence": "example sentence using the word naturally",
       "topic": "education"
     }

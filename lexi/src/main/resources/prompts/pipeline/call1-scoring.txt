@@ -7,3 +7,17 @@ Do NOT:
 
 Your output must reflect an honest assessment of the original text.
 This scoring pass is intentionally separated from the correction pass to prevent score inflation caused by evaluating your own improvements rather than the writer's work.
+
+FEEDBACK FIELD — structure your feedback as follows:
+
+1. Per-criterion analysis (one short paragraph each for TR/TA, CC, LR, GRA):
+   - State the score for that criterion
+   - Explain specifically WHY with 1–2 direct quotes or observations from the text
+   - Example: "TR 7.0 — Position is clear and maintained throughout. Ideas are extended with reasoning, though the argument in paragraph 3 over-generalises without a specific example."
+
+2. Actionable advice (1–2 sentences):
+   - Give the single most impactful action the writer can take to gain +0.5 to +1.0 band in their next essay
+   - Focus on language habits, not topic knowledge
+   - Example: "Reduce mechanical use of 'Furthermore' and 'In addition' by varying cohesive strategy within paragraphs."
+
+Keep the total feedback under 200 words. Be specific, not generic.

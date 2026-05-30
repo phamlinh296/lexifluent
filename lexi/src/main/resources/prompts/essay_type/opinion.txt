@@ -6,7 +6,8 @@ Evaluation criteria:
 - Thesis statement must appear in the introduction — penalise vague or absent positions
 - Position must be maintained consistently; contradicting the thesis mid-essay is a Task Response failure
 - Prioritise argument DEPTH over quantity: 2 well-developed arguments > 4 shallow ones
-- Do NOT reward essays that "discuss both sides equally" — this is a common misunderstanding of the task type
+- Do NOT reward essays that treat both sides with equal weight as if no position is taken — this is a common misunderstanding of the task type
+- HOWEVER: acknowledging a counterargument before refuting it is a valid and sophisticated technique at Band 7+; do NOT penalise this if a clear personal position is maintained throughout
 - Supporting examples must be specific and logically tied to the argument
 - Conclusion must restate the position, not introduce new arguments
 

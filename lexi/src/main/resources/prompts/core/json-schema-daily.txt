@@ -16,10 +16,12 @@ Return valid JSON matching this exact schema:
   "vocabularySuggestions": [
     {
       "word": "word from text",
+      "phonetic": "/wɜːrd/",
+      "vietnameseMeaning": "từ/cụm từ tiếng Việt ngắn gọn",
       "alternatives": ["better alternative 1"],
       "collocations": ["natural collocation 1"],
       "cefrLevel": "B2",
-      "definition": "brief definition",
+      "definition": "brief English-only definition",
       "exampleSentence": "example sentence",
       "topic": "education"
     }
@@ -33,15 +35,15 @@ Return valid JSON matching this exact schema:
     }
   ],
   "analytics": {
-    "grammarAccuracy": 0.80,
-    "fluencyScore": 0.75,
-    "lexicalDiversity": 0.65,
-    "naturalnessScore": 0.78,
-    "estimatedCefrLevel": "B2",
-    "sentenceCount": 8,
-    "avgSentenceLength": 15.0
+    "grammarAccuracy": <number>,
+    "fluencyScore": <number>,
+    "lexicalDiversity": <number>,
+    "naturalnessScore": <number>,
+    "estimatedCefrLevel": "<level>",
+    "sentenceCount": <integer>,
+    "avgSentenceLength": <number>
   },
-  "confidence": 0.85
+  "confidence": <number>
 }
 
 Constraints:

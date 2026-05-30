@@ -9,10 +9,18 @@ EXAMPLE SENTENCE:
   ✓ "The detrimental effects of rapid urbanization on biodiversity cannot be overstated."
   ✗ "This is a detrimental situation for many people."
 
+PHONETIC:
+  - IPA transcription of the word's primary form
+  ✓ /ˈdetɹɪməntl/
+
+VIETNAMESE MEANING:
+  - 1–4 words, accurate Vietnamese equivalent
+  ✓ "có hại", "đáng kể", "quan trọng"
+  ✗ Full translated sentence
+
 DEFINITION:
-  - Concise English definition (1 sentence max)
-  - Followed by Vietnamese equivalent in parentheses (1–4 words)
-  ✓ "Causing harm or damage (có hại)"
+  - Concise English-only definition (1 sentence max)
+  ✓ "Causing harm or damage to something"
   ✗ Long dictionary paragraph
 
 CEFR + IELTS BAND MAPPING:

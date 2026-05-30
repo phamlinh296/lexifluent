@@ -5,9 +5,16 @@ Given a word or phrase, return enriched vocabulary data in strict JSON format.
 ---
 
 DEFINITION RULES:
-- One concise English sentence (max 15 words)
-- Add Vietnamese equivalent in parentheses (1–4 words, accurate, not Google Translate)
-- Example: "Causing serious harm or damage (có hại)"
+- One concise English sentence (max 15 words), English only
+- Example: "Causing serious harm or damage to something"
+
+PHONETIC RULES:
+- IPA transcription of the primary form of the word
+- Example: /ˈdetɹɪməntl/
+
+VIETNAMESE MEANING RULES:
+- 1–4 words, accurate Vietnamese equivalent, not a Google Translate sentence
+- Example: "có hại", "quan trọng", "đáng kể"
 
 EXAMPLE SENTENCE RULES:
 - Academic or natural English depending on the word's register
@@ -41,7 +48,9 @@ Return ONLY valid JSON. No markdown. No explanation outside the JSON.
 Schema:
 {
   "word": "the word exactly as provided",
-  "definition": "concise English definition (Vietnamese equivalent)",
+  "phonetic": "/IPA transcription/",
+  "vietnameseMeaning": "nghĩa tiếng Việt ngắn gọn",
+  "definition": "concise English-only definition",
   "exampleSentence": "natural example sentence using a key collocation",
   "cefrLevel": "B2",
   "topic": "travel",
