@@ -96,15 +96,18 @@ public class AiOrchestrationService {
 
             String cefrLevel = entry.getUser().getCefrLevel() != null
                     ? entry.getUser().getCefrLevel().name() : null;
-            String userPrompt = promptComposer.buildUserPrompt(
+            // Scoring prompt omits CEFR level — examiner scores the writing, not the writer's profile
+            String scoringPrompt = promptComposer.buildUserPrompt(
+                    entry.getOriginalText(), entry.getTopicPrompt(), null);
+            String transformPrompt = promptComposer.buildUserPrompt(
                     entry.getOriginalText(), entry.getTopicPrompt(), cefrLevel);
 
             WritingClassification classification = classificationEngine.classify(
                     entry, entry.getCorrectionStyle(), message.userId());
 
             AiFeedbackEntity feedback = isIelts
-                    ? executeIeltsPipeline(entry, message.userId(), model, useStrong, userPrompt, classification, primaryRequest, start)
-                    : executeDailyPipeline(entry, message.userId(), model, userPrompt, classification, primaryRequest, start);
+                    ? executeIeltsPipeline(entry, message.userId(), model, useStrong, scoringPrompt, transformPrompt, classification, primaryRequest, start)
+                    : executeDailyPipeline(entry, message.userId(), model, transformPrompt, classification, primaryRequest, start);
 
             entry.markProcessed();
             writingEntryRepository.save(entry);
@@ -135,13 +138,14 @@ public class AiOrchestrationService {
     // IELTS: 2 calls — scoring first, transformation second
     // Separated so the examiner scores the raw text, not the model's own rewrites
     private AiFeedbackEntity executeIeltsPipeline(WritingEntry entry, UUID userId, String model, boolean useStrong,
-                                                   String userPrompt, WritingClassification classification,
+                                                   String scoringPrompt, String transformPrompt,
+                                                   WritingClassification classification,
                                                    AiRequestEntity scoringRequest, long globalStart) {
-        // Call 1: Scoring — enriched with essay type, band, and weakness context
+        // Call 1: Scoring — no CEFR level, no band target, no user history (blind evaluation)
         String scoringSystem = promptComposer.buildScoringSystemPrompt(classification);
         AiRequest call1 = useStrong
-                ? AiRequest.strong(scoringSystem, userPrompt, model)
-                : AiRequest.cheap(scoringSystem, userPrompt, model);
+                ? AiRequest.strong(scoringSystem, scoringPrompt, model)
+                : AiRequest.cheap(scoringSystem, scoringPrompt, model);
 
         AiCompletion scoringCompletion;
         AnalysisSchema analysis;
@@ -151,18 +155,18 @@ public class AiOrchestrationService {
         } catch (LexiException ex) {
             if (ex.getErrorCode() != ErrorCode.AI_RESPONSE_INVALID) throw ex;
             log.warn("Call 1 schema violation for entry {}, retrying: {}", entry.getId(), ex.getMessage());
-            String retryPrompt = promptComposer.buildSchemaRetryUserPrompt(userPrompt, ex.getMessage());
+            String retryPrompt = promptComposer.buildSchemaRetryUserPrompt(scoringPrompt, ex.getMessage());
             scoringCompletion = routeWithByok(entry, AiRequest.cheap(scoringSystem, retryPrompt, model));
             analysis = schemaValidator.parseAndValidateAnalysis(scoringCompletion.getContent());
         }
         applyCompletion(scoringRequest, scoringCompletion, (int) (System.currentTimeMillis() - globalStart));
         usageTracker.track(userId, scoringRequest.getId(), scoringCompletion);
 
-        // Call 2: Transformation — enriched with style, essay type, and weakness context
+        // Call 2: Transformation — includes CEFR level and band target for calibrated feedback
         String transformSystem = promptComposer.buildTransformationSystemPrompt(classification);
         AiRequest call2 = useStrong
-                ? AiRequest.strong(transformSystem, userPrompt, model)
-                : AiRequest.cheap(transformSystem, userPrompt, model);
+                ? AiRequest.strong(transformSystem, transformPrompt, model)
+                : AiRequest.cheap(transformSystem, transformPrompt, model);
 
         AiRequestEntity transformRequest = AiRequestEntity.builder()
                 .userId(userId)
@@ -182,7 +186,7 @@ public class AiOrchestrationService {
         } catch (LexiException ex) {
             if (ex.getErrorCode() != ErrorCode.AI_RESPONSE_INVALID) throw ex;
             log.warn("Call 2 schema violation for entry {}, retrying: {}", entry.getId(), ex.getMessage());
-            String retryPrompt = promptComposer.buildSchemaRetryUserPrompt(userPrompt, ex.getMessage());
+            String retryPrompt = promptComposer.buildSchemaRetryUserPrompt(transformPrompt, ex.getMessage());
             transformCompletion = routeWithByok(entry, AiRequest.cheap(transformSystem, retryPrompt, model));
             transformation = schemaValidator.parseAndValidateTransformation(transformCompletion.getContent());
         }

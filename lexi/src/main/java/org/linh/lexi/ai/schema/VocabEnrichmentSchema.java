@@ -9,6 +9,8 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class VocabEnrichmentSchema {
     private String word;
+    private String phonetic;
+    private String vietnameseMeaning;
     private String definition;
     private String exampleSentence;
     private String cefrLevel;

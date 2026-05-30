@@ -39,6 +39,8 @@ public class AiFeedbackSchema {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class VocabularySuggestion {
         private String word;
+        private String phonetic;
+        private String vietnameseMeaning;
         private List<String> alternatives;
         private List<String> collocations;
         private String cefrLevel;

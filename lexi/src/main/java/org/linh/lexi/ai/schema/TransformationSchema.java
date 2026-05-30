@@ -36,6 +36,8 @@ public class TransformationSchema {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class VocabularySuggestion {
         private String word;
+        private String phonetic;
+        private String vietnameseMeaning;
         private List<String> alternatives;
         private List<String> collocations;
         private String cefrLevel;  // A1 | A2 | B1 | B2 | C1 | C2

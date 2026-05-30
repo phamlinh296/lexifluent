@@ -110,7 +110,18 @@ public class GeminiProvider implements AiProvider {
             throw new LexiException(ErrorCode.AI_RESPONSE_INVALID);
         }
 
-        String content = response.candidates().get(0).content().parts().get(0).text();
+        Candidate candidate = response.candidates().get(0);
+        if (candidate.content() == null || candidate.content().parts() == null) {
+            log.error("Gemini candidate has no content parts. finishReason={}", candidate.finishReason());
+            throw new LexiException(ErrorCode.AI_RESPONSE_INVALID, "Gemini returned empty content. finishReason=" + candidate.finishReason());
+        }
+
+        // Skip thinking parts (thought=true) — gemini-2.5-flash may include them even with thinkingBudget=0
+        String content = candidate.content().parts().stream()
+                .filter(p -> !p.isThought() && p.text() != null)
+                .map(Part::text)
+                .findFirst()
+                .orElseThrow(() -> new LexiException(ErrorCode.AI_RESPONSE_INVALID, "Gemini returned no usable text part. finishReason=" + candidate.finishReason()));
         int promptTokens    = response.usageMetadata() != null ? response.usageMetadata().promptTokenCount() : 0;
         int completionTokens = response.usageMetadata() != null ? response.usageMetadata().candidatesTokenCount() : 0;
 
@@ -129,13 +140,15 @@ public class GeminiProvider implements AiProvider {
     record GeminiResponse(List<Candidate> candidates, UsageMetadata usageMetadata) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    record Candidate(Content content) {}
+    record Candidate(Content content, String finishReason) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     record Content(List<Part> parts) {}
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    record Part(String text) {}
+    record Part(String text, @JsonProperty("thought") Boolean thought) {
+        boolean isThought() { return Boolean.TRUE.equals(thought); }
+    }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     record UsageMetadata(

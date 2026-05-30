@@ -22,27 +22,26 @@ public class PromptComposer {
 
     // --- Classification-aware methods (Phase 5+) ---
 
-    // IELTS Call 1: examiner scoring — enriched with essay type + band context
+    // IELTS Call 1: examiner scoring — band target and weakness blocks excluded to prevent anchoring/bias
     public String buildScoringSystemPrompt(WritingClassification ctx) {
         List<String> blocks = new ArrayList<>();
         blocks.add(loader.load("modes/" + modeFile(ctx.mode())));
         addEssayTypeBlock(blocks, ctx);
         addTask1TypeBlock(blocks, ctx);
-        addBandBlock(blocks, ctx.targetBand());
-        addWeaknessBlocks(blocks, ctx.userWeaknesses());
         blocks.add(loader.load("pipeline/call1-scoring.txt"));
         blocks.add(loader.load("core/anti-hallucination.txt"));
         blocks.add(loader.load("core/json-schema-call1.txt"));
         return joinNonBlank(blocks);
     }
 
-    // IELTS Call 2: transformation — enriched with style + essay type context
+    // IELTS Call 2: transformation — band block included here for feedback tone + rewrite targeting
     public String buildTransformationSystemPrompt(WritingClassification ctx) {
         List<String> blocks = new ArrayList<>();
         blocks.add(loader.load("modes/" + modeFile(ctx.mode())));
         blocks.add(loader.load("styles/" + styleFile(ctx.style())));
         addEssayTypeBlock(blocks, ctx);
         addTask1TypeBlock(blocks, ctx);
+        addBandBlock(blocks, ctx.targetBand());
         addWeaknessBlocks(blocks, ctx.userWeaknesses());
         blocks.add(loader.load("pipeline/call2-transformation.txt"));
         blocks.add(loader.load("core/anti-hallucination.txt"));
