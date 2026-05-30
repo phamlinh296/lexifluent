@@ -37,6 +37,9 @@ export function WritingCard({ entry }: { entry: WritingEntry }) {
     });
   };
 
+  const isDraft = entry.status === 'DRAFT';
+  const href = isDraft ? `/writing/new?draftId=${entry.id}` : `/writing/${entry.id}`;
+
   return (
     <motion.div
       layout
@@ -44,7 +47,7 @@ export function WritingCard({ entry }: { entry: WritingEntry }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
     >
-      <Link href={`/writing/${entry.id}`}>
+      <Link href={href}>
         <div className="group border rounded-xl p-4 bg-card hover:shadow-md transition-all hover:border-primary/30">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
