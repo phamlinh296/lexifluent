@@ -54,6 +54,20 @@ public class TranslationAnalysisService {
             throw new LexiException(ErrorCode.ACCESS_DENIED);
         }
 
+        TranslationFeedbackSchema feedback = runAnalysis(userId, request, "flashcard " + flashcardId);
+
+        card.applyReview(scoreToQuality(feedback.getOverallScore()));
+        flashcardRepository.save(card);
+
+        return feedback;
+    }
+
+    @Transactional
+    public TranslationFeedbackSchema analyzeStandalone(UUID userId, AnalyzeTranslationRequest request) {
+        return runAnalysis(userId, request, "standalone");
+    }
+
+    private TranslationFeedbackSchema runAnalysis(UUID userId, AnalyzeTranslationRequest request, String context) {
         usageTracker.checkQuota(userId);
 
         String systemPrompt = promptLoader.load("flashcard/translation-coach.txt");
@@ -74,7 +88,7 @@ public class TranslationAnalysisService {
             feedback = parseSchema(completion.getContent());
         } catch (LexiException ex) {
             if (ex.getErrorCode() != ErrorCode.AI_RESPONSE_INVALID) throw ex;
-            log.warn("Translation schema violation for flashcard {}, retrying", flashcardId);
+            log.warn("Translation schema violation for {}, retrying", context);
             String retryPrompt = userPrompt + "\n\n---\nPREVIOUS RESPONSE WAS INVALID. Return ONLY valid JSON matching the schema. No markdown.";
             completion = routeWithByok(userId, AiRequest.cheap(systemPrompt, retryPrompt, cheapModel));
             feedback = parseSchema(completion.getContent());
@@ -95,9 +109,6 @@ public class TranslationAnalysisService {
         } catch (Exception ex) {
             log.warn("Mistake tracking failed for user {} (translation): {}", userId, ex.getMessage());
         }
-
-        card.applyReview(scoreToQuality(feedback.getOverallScore()));
-        flashcardRepository.save(card);
 
         return feedback;
     }
