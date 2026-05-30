@@ -5,8 +5,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { createQueryClient } from '@/lib/queryClient';
 import { useAuthStore } from '@/store/authStore';
-import { authApi } from '@/api/auth';
-import { getRefreshToken, clearTokens } from '@/lib/axios';
+import { getOrStartRefresh, getRefreshToken } from '@/lib/axios';
 import { Toaster } from '@/components/ui/toaster';
 
 function AuthHydrator() {
@@ -23,16 +22,9 @@ function AuthHydrator() {
       return;
     }
 
-    authApi
-      .refresh(refreshToken)
-      .then((res) => {
-        const auth = res.data.data!;
-        login(auth);
-      })
-      .catch(() => {
-        clearTokens();
-        logout();
-      })
+    getOrStartRefresh()
+      .then((auth) => login(auth))
+      .catch(() => logout())
       .finally(() => setHydrating(false));
   }, [login, logout, setHydrating]);
 

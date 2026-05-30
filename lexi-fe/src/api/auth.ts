@@ -13,6 +13,14 @@ export const authApi = {
       params: { token },
     }),
 
+  exchangeOAuthCode: (code: string) =>
+    apiClient.post<ApiResponse<AuthResponse>>('/api/v1/auth/oauth2/exchange', null, {
+      params: { code },
+    }),
+
   logout: () =>
     apiClient.post<void>('/api/v1/auth/logout'),
+
+  logoutAll: () =>
+    apiClient.post<void>('/api/v1/auth/logout-all'),
 };

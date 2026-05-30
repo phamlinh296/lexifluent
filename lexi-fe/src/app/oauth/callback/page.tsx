@@ -3,16 +3,15 @@
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
-import { setTokens, accessTokenRef } from '@/lib/axios';
+import { authApi } from '@/api/auth';
 
 export default function OAuthCallbackPage() {
   const router = useRouter();
   const params = useSearchParams();
-  const { setUser } = useAuthStore();
+  const { login } = useAuthStore();
 
   useEffect(() => {
-    const accessToken = params.get('access_token');
-    const refreshToken = params.get('refresh_token');
+    const code = params.get('code');
     const error = params.get('error');
 
     if (error === 'account_disabled') {
@@ -20,15 +19,20 @@ export default function OAuthCallbackPage() {
       return;
     }
 
-    if (!accessToken || !refreshToken) {
+    if (!code) {
       router.replace('/login?error=oauth_failed');
       return;
     }
 
-    accessTokenRef.current = accessToken;
-    setTokens(accessToken, refreshToken);
-    router.replace('/dashboard');
-  }, [params, router, setUser]);
+    // Exchange one-time code (30s TTL) for real tokens — never stored in URL/history
+    authApi
+      .exchangeOAuthCode(code)
+      .then((res) => {
+        login(res.data.data!);
+        router.replace('/dashboard');
+      })
+      .catch(() => router.replace('/login?error=oauth_failed'));
+  }, [params, router, login]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4">

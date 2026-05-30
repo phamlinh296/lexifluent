@@ -207,6 +207,16 @@ export interface AiFeedback {
 
 // ─── Vocabulary ───────────────────────────────────────────────────────────────
 
+export type VocabTopic =
+  | 'education' | 'technology' | 'business' | 'health' | 'environment'
+  | 'travel' | 'linking_word' | 'academic' | 'daily_life' | 'social'
+  | 'science' | 'law';
+
+export interface TopicCount {
+  topic: string;
+  count: number;
+}
+
 export interface VocabularyItem {
   id: string;
   userId: string;
@@ -217,6 +227,7 @@ export interface VocabularyItem {
   cefrLevel: CefrLevel | null;
   mastered: boolean;
   encounterCount: number;
+  topicTag: string | null;
   createdAt: string;
 }
 
@@ -246,13 +257,23 @@ export interface FlashcardStats {
   flashcardStreak: number;
 }
 
+export interface FlashcardGroup {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
 export interface Flashcard {
   id: string;
   type: FlashcardType;
   front: string;
   back: string;
+  hint: string | null;
   cefrLevel: CefrLevel | null;
+  source: string;
+  isFavorite: boolean;
   vocabularyItemId: string | null;
+  groupIds: string[];
   easeFactor: number;
   intervalDays: number;
   reviewCount: number;
@@ -268,6 +289,18 @@ export interface CreateFlashcardRequest {
   cefrLevel?: string;
   vocabularyItemId?: string;
   type?: FlashcardType;
+}
+
+export interface ImportRowError {
+  row: number;
+  reason: string;
+}
+
+export interface ImportResult {
+  imported: number;
+  skipped: number;
+  failed: number;
+  errors: ImportRowError[];
 }
 
 export interface ReviewFlashcardRequest {
