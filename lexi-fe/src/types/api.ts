@@ -138,6 +138,17 @@ export interface SubmitWritingRequest {
   targetBand?: TargetBand;
 }
 
+export interface SaveDraftRequest {
+  mode: WritingMode;
+  correctionStyle?: CorrectionStyle;
+  text?: string;
+  title?: string;
+  topicPrompt?: string;
+  essayType?: EssayType;
+  task1Type?: Task1Type;
+  targetBand?: TargetBand;
+}
+
 // ─── AI Feedback ─────────────────────────────────────────────────────────────
 
 export type CorrectionType =
@@ -222,6 +233,8 @@ export interface VocabularyItem {
   userId: string;
   writingEntryId: string | null;
   word: string;
+  phonetic: string | null;
+  vietnameseMeaning: string | null;
   definition: string;
   exampleSentence: string;
   cefrLevel: CefrLevel | null;
@@ -269,6 +282,8 @@ export interface Flashcard {
   front: string;
   back: string;
   hint: string | null;
+  phonetic: string | null;
+  vietnameseMeaning: string | null;
   cefrLevel: CefrLevel | null;
   source: string;
   isFavorite: boolean;
@@ -286,6 +301,8 @@ export interface Flashcard {
 export interface CreateFlashcardRequest {
   front: string;
   back: string;
+  phonetic?: string;
+  vietnameseMeaning?: string;
   cefrLevel?: string;
   vocabularyItemId?: string;
   type?: FlashcardType;
