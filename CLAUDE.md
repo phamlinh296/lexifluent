@@ -188,4 +188,18 @@ lexi.rate-limit.requests-per-minute
 - **Schema retry**: on `AI_RESPONSE_INVALID`, rebuild user prompt with error details → single retry (no loop)
 
 ## Bug Documentation Rule
-Sau mỗi lần fix lỗi liên quan đến **backend** hoặc **tương tác BE↔FE**, append một entry vào `docs/fix.md` gồm: triệu chứng, root cause, fix, và bài học thiết kế.
+Chỉ append vào `docs/fix.md` khi lỗi thuộc một trong các nhóm sau (lỗi có giá trị học thuật, hữu ích trong phỏng vấn backend):
+- **Concurrency / race condition** (e.g. token rotation, cache stampede)
+- **Security design** (e.g. token leakage, missing auth, insecure defaults)
+- **Data consistency** (e.g. upsert race, dirty read, cascade delete)
+- **Architecture / integration** (e.g. event ordering, retry storm, schema mismatch BE↔FE)
+- **Performance / resource** (e.g. N+1, connection leak, unbounded queue)
+
+**Không ghi vào fix.md**: lỗi typo, sai giá trị config, sai text trong file tĩnh, lỗi UI/CSS — những thứ không liên quan đến thiết kế hệ thống.
+
+## Commit Convention
+
+- Group files by feature per commit — không commit tất cả một lúc.
+- Follow Conventional Commits: `feat(scope)`, `fix(scope)`, `chore(scope)`, `docs`, `refactor(scope)`.
+- Scope: `be` (backend), `fe` (frontend), hoặc module cụ thể (`flashcard`, `ai`, `writing`…).
+- **Trước khi commit `application.yaml` / `application.yml`**: thay mọi default value là key thật bằng empty — `${ENV_VAR:}` — không commit key thật vào git.

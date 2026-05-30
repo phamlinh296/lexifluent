@@ -101,3 +101,25 @@ Review bảo mật phát hiện các vấn đề tiềm ẩn từ thiết kế, 
 **6. Stateless API không nên tạo session** — `STATELESS` tắt hoàn toàn session creation. `IF_REQUIRED` tạo session khi cần, mâu thuẫn với JWT design và tăng attack surface.
 
 ---
+
+## [2026-05-30] AI xử lý thất bại — Gemini API key bị leak
+
+### Triệu chứng
+Mọi bài viết submit đều chuyển sang status `FAILED` ngay sau vài giây. Frontend hiển thị "AI xử lý thất bại. Vui lòng thử lại hoặc liên hệ hỗ trợ."
+
+### Root Cause
+API key Gemini được hardcode trực tiếp làm default value trong `application.yaml`:
+```yaml
+api-key: ${GEMINI_API_KEY:AIzaSyBL...}
+```
+File này được commit lên git → Google's secret scanner phát hiện → tự động revoke key → mọi request trả về `403 PERMISSION_DENIED: "Your API key was reported as leaked"`. Fallback provider (OpenAI) cũng fail vì `OPENAI_API_KEY` để trống.
+
+### Fix
+1. Xóa hardcoded key, chỉ giữ env var placeholder: `api-key: ${GEMINI_API_KEY:}`
+2. Lấy key mới tại aistudio.google.com/apikey
+3. Set qua IntelliJ Run Configuration hoặc terminal: `$env:GEMINI_API_KEY = "new-key"`
+
+### Bài học thiết kế
+**Không bao giờ hardcode secrets trong file được commit**, kể cả dạng fallback default. Pattern `${VAR:defaultValue}` trông vô hại nhưng thực chất embed secret vào git history mãi mãi. Dùng `${VAR}` (không có default) để ứng dụng fail-fast khi thiếu config thay vì silently dùng exposed key. Với dev local, dùng IntelliJ env vars hoặc `.env` file (đã gitignored).
+
+---
