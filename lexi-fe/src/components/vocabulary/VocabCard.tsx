@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BookmarkPlus, Check, ChevronDown, Folder, Trophy } from 'lucide-react';
 import { cefrColor, cn } from '@/lib/utils';
 import type { FlashcardGroup, VocabularyItem } from '@/types/api';
@@ -14,17 +14,30 @@ const TOPIC_LABELS: Record<string, string> = {
 
 interface VocabCardProps {
   item: VocabularyItem;
-  onAddFlashcard?: () => void;
-  isSaved?: boolean;
+  savedFlashcardId?: string;          // set = đã lưu; undefined = chưa lưu
+  onSave?: (groupId?: string) => void; // undefined = lưu standalone, string = lưu vào nhóm
+  onRemoveFlashcard?: () => void;      // bỏ lưu
   onToggleMastered?: () => void;
   groups?: FlashcardGroup[];
-  onAddToGroup?: (groupId: string) => void;
 }
 
 export function VocabCard({
-  item, onAddFlashcard, isSaved, onToggleMastered, groups = [], onAddToGroup,
+  item, savedFlashcardId, onSave, onRemoveFlashcard, onToggleMastered, groups = [],
 }: VocabCardProps) {
-  const [showGroupPicker, setShowGroupPicker] = useState(false);
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!open) return;
+    function handle(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, [open]);
 
   return (
     <div className="border rounded-xl p-4 bg-card space-y-2">
@@ -66,55 +79,70 @@ export function VocabCard({
             </span>
           )}
 
-          {/* Add to group dropdown */}
-          {groups.length > 0 && onAddToGroup && (
-            <div className="relative">
+          {/* Save button */}
+          {onSave && (
+            savedFlashcardId ? (
+              /* Đã lưu — click để bỏ lưu */
               <button
-                onClick={() => setShowGroupPicker((v) => !v)}
-                title="Thêm vào nhóm"
-                className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border border-border text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                onClick={onRemoveFlashcard}
+                title="Click để bỏ lưu flashcard"
+                className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border border-green-300 bg-green-50 text-green-600 dark:bg-green-950/30 dark:text-green-400 hover:border-red-300 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/30 dark:hover:text-red-400 transition-colors"
               >
-                <Folder className="h-3 w-3" />
-                Nhóm
-                <ChevronDown className={cn('h-3 w-3 transition-transform', showGroupPicker && 'rotate-180')} />
+                <Check className="h-3 w-3" />
+                Đã lưu
               </button>
-              {showGroupPicker && (
-                <div className="absolute right-0 top-7 z-20 w-44 bg-popover border rounded-lg shadow-lg py-1">
-                  <p className="text-xs text-muted-foreground px-3 py-1 border-b">Chọn nhóm</p>
-                  {groups.map((g) => (
-                    <button
-                      key={g.id}
-                      onClick={() => { onAddToGroup(g.id); setShowGroupPicker(false); }}
-                      className="w-full text-left text-sm px-3 py-1.5 hover:bg-accent flex items-center gap-2"
-                    >
-                      <Folder className="h-3.5 w-3.5 shrink-0 text-primary/70" />
-                      <span className="truncate">{g.name}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+            ) : (
+              /* Chưa lưu — dropdown chọn nhóm hoặc standalone */
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setOpen((v) => !v)}
+                  className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border border-border text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
+                >
+                  <BookmarkPlus className="h-3 w-3" />
+                  Lưu
+                  <ChevronDown className={cn('h-3 w-3 transition-transform', open && 'rotate-180')} />
+                </button>
 
-          {/* Save as flashcard */}
-          {onAddFlashcard && (
-            <button
-              onClick={onAddFlashcard}
-              disabled={isSaved}
-              title={isSaved ? 'Đã lưu flashcard' : 'Lưu làm flashcard'}
-              className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border transition-colors ${
-                isSaved
-                  ? 'border-green-300 bg-green-50 text-green-600 cursor-default'
-                  : 'border-border hover:border-primary/50 hover:text-primary text-muted-foreground'
-              }`}
-            >
-              {isSaved ? <Check className="h-3 w-3" /> : <BookmarkPlus className="h-3 w-3" />}
-              {isSaved ? 'Đã lưu' : 'Flashcard'}
-            </button>
+                {open && (
+                  <div className="absolute right-0 top-7 z-20 w-52 bg-white dark:bg-zinc-900 border rounded-lg shadow-xl py-1">
+                    {/* Lưu không có nhóm */}
+                    <button
+                      onClick={() => { onSave(undefined); setOpen(false); }}
+                      className="w-full text-left px-3 py-2 hover:bg-accent flex items-center gap-2 text-muted-foreground"
+                    >
+                      <BookmarkPlus className="h-3.5 w-3.5 shrink-0" />
+                      <span className="text-xs">Không có nhóm</span>
+                    </button>
+
+                    {/* Danh sách nhóm */}
+                    {groups.length > 0 && (
+                      <>
+                        <div className="border-t my-1" />
+                        <p className="text-[10px] text-muted-foreground px-3 pb-1">Lưu vào nhóm</p>
+                        {groups.map((g) => (
+                          <button
+                            key={g.id}
+                            onClick={() => { onSave(g.id); setOpen(false); }}
+                            className="w-full text-left px-3 py-1.5 hover:bg-accent flex items-center gap-2"
+                          >
+                            <Folder className="h-3.5 w-3.5 shrink-0 text-primary/70" />
+                            <span className="truncate text-xs">{g.name}</span>
+                          </button>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            )
           )}
         </div>
       </div>
 
+      <div className="flex items-center gap-2 flex-wrap">
+        {item.phonetic && <span className="text-sm font-mono text-muted-foreground">{item.phonetic}</span>}
+        {item.vietnameseMeaning && <span className="text-sm text-blue-600 dark:text-blue-400">{item.vietnameseMeaning}</span>}
+      </div>
       {item.definition && <p className="text-sm text-muted-foreground">{item.definition}</p>}
       {item.exampleSentence && (
         <p className="text-xs italic text-muted-foreground border-l-2 border-primary/30 pl-2">

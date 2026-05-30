@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useVocabularyList, useWeakVocabulary, useVocabTopics, useAddVocabulary, useMarkMastered, useAddVocabToGroup } from '@/hooks/useVocabulary';
-import { useFlashcards, useCreateFlashcard } from '@/hooks/useFlashcards';
+import { useFlashcards, useCreateFlashcard, useDeleteFlashcard } from '@/hooks/useFlashcards';
 import { useFlashcardGroups } from '@/hooks/useFlashcardGroups';
 import { VocabCard } from '@/components/vocabulary/VocabCard';
 import { Input } from '@/components/ui/input';
@@ -36,7 +36,6 @@ export default function VocabularyPage() {
   const [page, setPage] = useState(0);
   const [showAddWord, setShowAddWord] = useState(false);
   const [newWord, setNewWord] = useState('');
-  const [sessionSaved, setSessionSaved] = useState<Set<string>>(new Set());
 
   const allQuery = useVocabularyList(page, 30, topicFilter);
   const weakQuery = useWeakVocabulary(page, 20);
@@ -44,6 +43,7 @@ export default function VocabularyPage() {
   const { data: allFlashcards = [] } = useFlashcards(false);
   const { data: groups = [] } = useFlashcardGroups();
   const createFlashcard = useCreateFlashcard();
+  const deleteFlashcard = useDeleteFlashcard();
   const addVocab = useAddVocabulary();
   const markMastered = useMarkMastered();
   const addToGroup = useAddVocabToGroup();
@@ -51,8 +51,13 @@ export default function VocabularyPage() {
   const activeQuery = tab === 'weak' ? weakQuery : allQuery;
   const { data, isLoading } = activeQuery;
 
-  const savedVocabIds = useMemo(
-    () => new Set(allFlashcards.map((f) => f.vocabularyItemId).filter(Boolean) as string[]),
+  // vocabId → flashcard (chỉ lấy BASIC card liên kết vocab)
+  const vocabToFlashcard = useMemo(
+    () => new Map(
+      allFlashcards
+        .filter((f) => f.vocabularyItemId !== null)
+        .map((f) => [f.vocabularyItemId!, f]),
+    ),
     [allFlashcards],
   );
 
@@ -75,17 +80,21 @@ export default function VocabularyPage() {
     setPage(0);
   }
 
-  function handleAddFlashcard(item: VocabularyItem) {
-    createFlashcard.mutate(
-      {
+  // groupId undefined = lưu standalone, string = lưu vào nhóm (tạo card nếu chưa có)
+  function handleSave(item: VocabularyItem, groupId?: string) {
+    if (groupId) {
+      addToGroup.mutate({ vocabId: item.id, groupId });
+    } else {
+      createFlashcard.mutate({
         front: item.word,
         back: [item.definition, item.exampleSentence ? `Ví dụ: ${item.exampleSentence}` : '']
           .filter(Boolean).join('\n'),
+        phonetic: item.phonetic ?? undefined,
+        vietnameseMeaning: item.vietnameseMeaning ?? undefined,
         cefrLevel: item.cefrLevel ?? undefined,
         vocabularyItemId: item.id,
-      },
-      { onSuccess: () => setSessionSaved((prev) => new Set(prev).add(item.id)) },
-    );
+      });
+    }
   }
 
   function handleAddWord() {
@@ -114,7 +123,7 @@ export default function VocabularyPage() {
       {/* Manual add word form */}
       {showAddWord && (
         <div className="mb-5 p-4 border rounded-xl bg-card space-y-3">
-          <p className="text-sm font-medium">Thêm từ mới — AI sẽ tự phân tích chủ đề, định nghĩa, ví dụ</p>
+          <p className="text-sm font-medium">Thêm từ mới <span className="text-destructive ml-0.5">*</span> — AI sẽ tự phân tích chủ đề, định nghĩa, ví dụ</p>
           <div className="flex gap-2">
             <Input
               placeholder="VD: curriculum, nevertheless, invoice..."
@@ -226,17 +235,20 @@ export default function VocabularyPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {filtered.map((v) => (
-                <VocabCard
-                  key={v.id}
-                  item={v}
-                  onAddFlashcard={tab === 'all' ? () => handleAddFlashcard(v) : undefined}
-                  isSaved={savedVocabIds.has(v.id) || sessionSaved.has(v.id)}
-                  onToggleMastered={() => markMastered.mutate({ id: v.id, mastered: !v.mastered })}
-                  groups={groups}
-                  onAddToGroup={(groupId) => addToGroup.mutate({ vocabId: v.id, groupId })}
-                />
-              ))}
+              {filtered.map((v) => {
+                const saved = vocabToFlashcard.get(v.id);
+                return (
+                  <VocabCard
+                    key={v.id}
+                    item={v}
+                    savedFlashcardId={saved?.id}
+                    onSave={(groupId) => handleSave(v, groupId)}
+                    onRemoveFlashcard={saved ? () => deleteFlashcard.mutate(saved.id) : undefined}
+                    onToggleMastered={() => markMastered.mutate({ id: v.id, mastered: !v.mastered })}
+                    groups={groups}
+                  />
+                );
+              })}
             </div>
           )}
 
